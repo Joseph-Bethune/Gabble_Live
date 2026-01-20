@@ -5,9 +5,14 @@ import { getDefaultRoleCode } from '../middleware/verifyRoles.js'
 import { logEvent } from '../middleware/eventLogger.js'
 import { generateAccessToken, generateRefreshToken, decodeAccessToken, decodeRefreshToken } from '../middleware/verifyJWT.js';
 
-const jwtCookieOptions = true ?
-    { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 } : // testing only
-    { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }; //deployment
+
+const getCookieOptions = () => {
+    if(process.env.NODE_ENV == "production") {
+        return { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }
+    } else {
+        return { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }
+    }
+}
 
 const USERNAME_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/;
 
@@ -29,20 +34,20 @@ const handleRegisterAttempt = async (req, res) => {
     if (res.headersSent) return;
 
     // extract request data
-    if (!req.body) return res.status(400).json({ 'error': 'Request is missing body data.' });
+    if (!req.body) return res.status(400).json({ success: false, 'error': 'Request is missing body data.' });
     const { username, password, displayName } = req.body;
 
-    if (!username || !password) return res.status(400).json({ 'error': 'Username and password are required' });
+    if (!username || !password) return res.status(400).json({ success: false, 'error': 'Username and password are required' });
 
-    if (!displayName) return res.status(400).json({ 'error': 'Display name required.' });
+    if (!displayName) return res.status(400).json({ success: false, 'error': 'Display name required.' });
 
     // check for duplicate usernames in the db
     let duplicateName = await UserModel.findOne({ username: username }).exec();
-    if (duplicateName) return res.status(409).json({ 'error': 'Cant register new user with that name. User already exists.' });
+    if (duplicateName) return res.status(409).json({ success: false, 'error': 'Cant register new user with that name. User already exists.' });
 
     // check for duplicate usernames in the db
     duplicateName = await UserModel.findOne({ displayName: displayName }).exec();
-    if (duplicateName) return res.status(409).json({ 'error': 'Cant register new user with that display name: it is already in use.' });
+    if (duplicateName) return res.status(409).json({ success: false, 'error': 'Cant register new user with that display name: it is already in use.' });
 
     try {
         // encrypt password
@@ -69,13 +74,13 @@ const handleLoginAttempt = async (req, res) => {
     if (res.headersSent) return;
 
     // extract request data
-    if (!req.body) return res.status(400).json({ 'error': 'Request is missing body data.' });
+    if (!req.body) return res.status(400).json({ success:false, 'error': 'Request is missing body data.' });
     const { username, password } = req.body;
 
-    if (!username || !password) return res.status(400).json({ 'error': 'Username and password are required' });
+    if (!username || !password) return res.status(400).json({ success:false, 'error': 'Username and password are required' });
 
     const foundUser = await UserModel.findOne({ username: username }).exec();
-    if (!foundUser) return res.status(401).json({ 'error': "No user with that username" });
+    if (!foundUser) return res.status(401).json({ success:false, 'error': "No user with that username" });
 
     const match = await bcrypt.compare(password, foundUser.password);
 
@@ -88,11 +93,11 @@ const handleLoginAttempt = async (req, res) => {
         foundUser.refreshToken = refreshToken;
         const result = await foundUser.save();
 
-        res.cookie('jwtRefreshToken', refreshToken, jwtCookieOptions);
+        res.cookie('jwtRefreshToken', refreshToken, getCookieOptions());
         res.status(200).json({ success: true, 'message': `User ${username} is logged in.`, 'accessToken': accessToken, 'displayName': foundUser.displayName });
         return;
     } else {
-        res.status(401).json({ 'error': 'Incorrect password.' })
+        res.status(401).json({ success:false, 'error': 'Incorrect password.' })
         return;
     }
 }
@@ -127,8 +132,6 @@ const handleRefreshToken = async (req, res) => {
 }
 
 const handleLogout = async (req, res) => {
-    // on client: also delete the access token
-
     if (res.headersSent) return;
 
     const refreshToken = req.cookies?.jwtRefreshToken
@@ -142,7 +145,7 @@ const handleLogout = async (req, res) => {
     foundUser.refreshToken = "";
     const result = await foundUser.save();
 
-    res.clearCookie('jwtRefreshToken', jwtCookieOptions);
+    res.clearCookie('jwtRefreshToken', getCookieOptions());
     return res.status(200).json({ success: true, message: `${foundUser.username} successfully logged out.` }); // secure: true - only serves on https
 }
 

@@ -24,8 +24,6 @@ const MessageSearchPage = () => {
 
     const sendMessageThunkStatus = useSelector(getSendMessageThunkStatus);
 
-    const [displayPosts, setDisplayPosts] = useState(null);
-
     const [postToReplyTo, setPostToReplyTo] = useState("");
     const isLoggedIn_redux = useSelector(isLoggedIn);
     const getDisplayName_redux = useSelector(getDisplayName);
@@ -77,6 +75,8 @@ const MessageSearchPage = () => {
     }, [sendMessageThunkStatus]);
 
     //#region root post display
+
+    const [displayPosts, setDisplayPosts] = useState(null);
 
     useEffect(() => {
         if (rootMessageSearchThunkStatus == thunkStatuses.fulfilled) {
@@ -280,7 +280,7 @@ const MessageSearchPage = () => {
                         Search
                     </button>
                 </form>
-                <NavButton links={[]} />
+                <NavButton links={[]} showLogin={true} showRegistration={true} />
             </div>
             <div id="bodyDiv" className="searchResults">
                 {displayPosts}

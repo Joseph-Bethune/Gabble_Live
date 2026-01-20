@@ -17,7 +17,7 @@ dotenv.config();
 
 //#region get ipv4 address
 
-function getIPv4Address() {
+export function getIPv4Address() {
     // Iterate through network interfaces to find the desired IP address
     let networkInterfaces = os.networkInterfaces();
     if (networkInterfaces) {
@@ -128,9 +128,7 @@ const setupAndStartServer = () => {
         checkRoles();
         applyRequestBodyMiddleware();
         applyMiddlewareForCookies();
-        if (process.env.NODE_ENV != "production") {
-            applyCorsMiddleWare();
-        }
+        applyCorsMiddleWare();
         applyErrorHandlerMiddleware();
         applyLoggerMiddleware();
         applyRoutes();

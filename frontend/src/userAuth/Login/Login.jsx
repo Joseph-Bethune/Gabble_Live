@@ -1,11 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { thunkStatuses, setStateFromSessionStorage, } from '../userAuthSlice.js';
+import { checkAccessTokenThunk, getCheckAccessTokenThunkStatus, resetCheckAccessTokenThunkStatus, } from '../userAuthSlice.js';
+import { refreshLoginThunk, getRefreshLoginThunkStatus, resetRefreshLoginThunkStatus, } from '../userAuthSlice.js';
 import {
-    loginUserThunk, getLoginThunkStatus, getUserName, thunkStatuses, resetLoginThunkStatus, setStateFromSessionStorage,
-    checkAccessTokenThunk, getCheckAccessTokenThunkStatus, resetCheckAccessTokenThunkStatus,
-    refreshLoginThunk, getRefreshLoginThunkStatus, resetRefreshLoginThunkStatus,
-    isLoggedIn,
-    getUserAccessToken,
+    loginUserThunk, getLoginThunkStatus, getLoginThunkStatusError, resetLoginThunkStatus,
+    isLoggedIn, getUserAccessToken, getUserName,
 } from '../userAuthSlice.js';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import NavButton from '../../navButton/NavButton.jsx';
@@ -27,7 +27,6 @@ const Login = (props) => {
     const [pwdFocus, setPwdFocus] = useState(false);
     const [validPwd, setValidPwd] = useState(false);
 
-    const loginThunkStatus = useSelector(getLoginThunkStatus);
     const checkAccessTokenThunkStatus = useSelector(getCheckAccessTokenThunkStatus);
     const refreshLoginThunkStatus = useSelector(getRefreshLoginThunkStatus);
     const isLoggedIn_redux = useSelector(isLoggedIn);
@@ -49,10 +48,10 @@ const Login = (props) => {
     }, []);
 
     useEffect(() => {
-        if(!isLoggedIn_redux){
-            if(accessToken_redux != null){
+        if (!isLoggedIn_redux) {
+            if (accessToken_redux != null) {
                 dispatch(checkAccessTokenThunk());
-            }            
+            }
         } else {
             navigate('/user/');
         }
@@ -91,33 +90,61 @@ const Login = (props) => {
 
     }, [pwd]);
 
-    useEffect(() => {
-        if (loginThunkStatus === thunkStatuses.fulfilled) {
-            dispatch(resetLoginThunkStatus());
-            navigate('/user/');
-        }
-    }, [loginThunkStatus]);
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         dispatch(loginUserThunk({ username: userName, password: pwd }));
     }
 
+    //#region login thunk status and error message
+
+    const loginThunkStatus = useSelector(getLoginThunkStatus);
+    const loginStatusError = useSelector(getLoginThunkStatusError);
+    const [errorText, setErrorText] = useState(null);
+    const [errorClasses, setErrorClasses] = useState("hidden");
+
+    useEffect(() => {
+        if (loginThunkStatus === thunkStatuses.fulfilled) {
+            dispatch(resetLoginThunkStatus());
+            navigate('/user/');
+            resetLoginThunkStatus();
+        } else if (loginThunkStatus == thunkStatuses.rejected) {
+            if (loginStatusError != null) {
+                setErrorText(loginStatusError);
+                setErrorClasses("errorMessage");
+                resetLoginThunkStatus();
+            } else {
+                setErrorText(null);
+                setErrorClasses("hidden");
+                resetLoginThunkStatus();
+            }
+
+        }
+    }, [loginThunkStatus]);
+
+    //#endrgion
+
+    //#region links
+
     const getLinks = () => {
         return [
-            {text:"Search", dest: "/"}
+            { text: "Search", dest: "/" }
         ]
     }
+
+    //#endregion
 
     return (
         <div>
             <div className="topBar">
-                <NavButton links={getLinks()} showLogin={false} />
+                <NavButton links={getLinks()} showRegistration={true} />
             </div>
             <div className='centerDiv rootDiv'>
                 <title>User Login</title>
                 <h1>Login</h1>
-                <form className="verticalForm" onSubmit={handleSubmit}>
+                <div className={errorClasses}>
+                    {errorText}
+                </div>
+                <form className="verticalForm authForm" onSubmit={handleSubmit}>
                     <label htmlFor="username">
                         Username
                     </label>

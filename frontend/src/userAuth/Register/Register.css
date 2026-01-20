@@ -12,8 +12,13 @@
 
 .instructions{
     color:white;
+    font-size: 1rem;
 }
 
 .offscreen{
     display:none;
+}
+
+.regForm {
+    gap: 1rem
 }

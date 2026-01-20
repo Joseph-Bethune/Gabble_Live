@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux'
-import { registerNewUserThunk, getRegistrationThunkStatus, thunkStatuses, resetRegistrationThunkStatus } from '../userAuthSlice';
+import { thunkStatuses, 
+    registerNewUserThunk, getRegistrationThunkStatus, resetRegistrationThunkStatus, getRegistrationThunkStatusError } from '../userAuthSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import NavButton from '../../navButton/NavButton';
 import "../styles/userAuth.css";
@@ -31,8 +32,6 @@ const Register = () => {
 
     const [errMsg, setErrMsg] = useState('');
     const [success, setSuccess] = useState(false);
-
-    const registrationThunkStatus = useSelector(getRegistrationThunkStatus);
 
     useEffect(() => {
         //userRef.current.focus();
@@ -66,15 +65,7 @@ const Register = () => {
 
     useEffect(() => {
         setErrMsg('');
-    }, [username, pwd, matchPwd]);
-
-    useEffect(() => {
-        // triggers when the registration status changes
-        if (registrationThunkStatus === thunkStatuses.fulfilled) {
-            dispatch(resetRegistrationThunkStatus());
-            navigate("/user/login", { state: { username: username } });
-        }
-    }, [registrationThunkStatus])
+    }, [username, pwd, matchPwd]);    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -85,8 +76,35 @@ const Register = () => {
             setErrMsg("Invalid Entry");
             return;
         }
-        dispatch(registerNewUserThunk({ username: username, password: pwd }));
+        dispatch(registerNewUserThunk({ username: username, password: pwd, displayName: username }));
     }
+
+    //#region registration thunk status and error message
+
+    const [errorText, setErrorText] = useState(null);
+    const [errorClasses, setErrorClasses] = useState("hidden");
+    const registrationThunkStatus = useSelector(getRegistrationThunkStatus);
+    const registrationErrorMessage = useSelector(getRegistrationThunkStatusError);
+
+    useEffect(() => {
+        // triggers when the registration status changes
+        if (registrationThunkStatus === thunkStatuses.fulfilled) {
+            dispatch(resetRegistrationThunkStatus());
+            setErrorClasses("hidden");
+            setErrorText(null);
+            navigate("/user/login", { state: { username: username } });
+        } else if (registrationThunkStatus == thunkStatuses.rejected){
+            if(registrationErrorMessage != null){
+                setErrorClasses("errorMessage");
+                setErrorText(registrationErrorMessage);
+                dispatch(resetRegistrationThunkStatus());
+            }
+        }
+    }, [registrationThunkStatus])
+
+    //#endregion
+
+    //#region nav bar links
 
     const getLinks = () => {
         return [
@@ -94,16 +112,21 @@ const Register = () => {
         ]
     }
 
+    //#endregion
+
     return (
         <div>
             <div className="topBar">
-                <NavButton links={getLinks()} />
+                <NavButton links={getLinks()} showLogin={true}/>
             </div>
             <div className='centerDiv rootDiv'>
                 <title>New User Registration</title>
                 <p ref={errRef} className={errMsg ? "errmsg" : "offscreen"} aria-live="assertive">{errMsg}</p>
                 <h1>Register</h1>
-                <form className='verticalForm' onSubmit={handleSubmit}>
+                <div className={errorClasses} style={{marginBottom: '1rem'}}>
+                    {errorText}
+                </div>
+                <form className='verticalForm authForm regForm' onSubmit={handleSubmit}>
                     <div>
                         <label htmlFor="username">Username :
                             {validName ? (<span className="valid">Good</span>) : (<span className="invalid">Invalid Username</span>)}

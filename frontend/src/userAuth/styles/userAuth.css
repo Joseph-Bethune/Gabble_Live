@@ -2,3 +2,15 @@
     background-color: light-dark(white, rgb(50,50,50));
     color: light-dark(black, white);
 }
+
+.hidden {
+    display: none;
+}
+
+.errorMessage {
+    color: red;
+}
+
+.authForm label {
+    font-size: 1.5rem;
+}

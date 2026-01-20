@@ -36,12 +36,21 @@ const NavButton = (props) => {
             ];
         } else {
             buttons = [
-                props.showLogin == true || props.showLogin == null ?
+                props.showLogin == true ?
                     <button
                         key={++index}
                         onClick={() => { navigate('/user/login') }}
                     >
                         Sign In
+                    </button>
+                    :
+                    null,
+                props.showRegistration == true ?
+                    <button
+                        key={++index}
+                        onClick={() => { navigate('/user/register') }}
+                    >
+                        Sign Up
                     </button>
                     :
                     null

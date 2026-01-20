@@ -13,9 +13,9 @@ const initialState = {
     displayName: null,
     accessToken: null,
     thunkStatuses: {
-        login: thunkStatuses.idle,
+        login: { status: thunkStatuses.idle, error: null },
         refreshLogin: thunkStatuses.idle,
-        registration: thunkStatuses.idle,
+        registration: { status: thunkStatuses.idle, error: null },
         logout: thunkStatuses.idle,
         checkAccessToken: thunkStatuses.idle,
         changeDisplayName: { status: thunkStatuses.idle, error: null },
@@ -24,7 +24,10 @@ const initialState = {
 };
 
 const getAuthServerURL = () => {
-    return `${import.meta.env.VITE_BACKEND_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`
+    let value = ""
+    value = `${import.meta.env.VITE_BACKEND_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`;
+
+    return value;
 }
 
 //#region saving user data to local session
@@ -62,12 +65,18 @@ export const registerNewUserThunk = createAsyncThunk(
     "userAuth/registerNewUser",
     async (params, thunkAPI) => {
         const state = thunkAPI.getState();
+        const { username, password, displayName } = params;
+
         const url = getAuthServerURL() + "/users/register";
-        const { username, password } = params;
+        const data = { username, password, displayName };
+        const config = {};
 
-        const response = await axios.post(url, { username, password });
-
-        return { ...response.data, username };
+        try {
+            const response = await axios.post(url, data, config);
+            return { ...response.data, username };
+        } catch (err) {
+            return thunkAPI.rejectWithValue(err.response.data);
+        }
     }
 );
 
@@ -75,16 +84,24 @@ export const loginUserThunk = createAsyncThunk(
     "userAuth/loginUser",
     async (params, thunkAPI) => {
         const state = thunkAPI.getState();
-        const url = getAuthServerURL() + "/users/login";
         const { username, password } = params;
 
-        const response = await axios.post(
-            url,
-            { username, password },
-            { withCredentials: true }
-        );
+        const url = getAuthServerURL() + "/users/login";
+        const data = { username, password };
+        const config = { withCredentials: true };
 
-        return { ...response.data, username };
+
+        try {
+            const response = await axios.post(
+                url,
+                data,
+                config
+            );
+
+            return { ...response.data, username };
+        } catch (err) {
+            return thunkAPI.rejectWithValue(err.response.data);
+        }
     }
 );
 
@@ -102,7 +119,7 @@ export const refreshLoginThunk = createAsyncThunk(
         };
 
         const response = await axios.get(
-            url, config
+            url, data, config
         );
 
         return response.data;
@@ -136,7 +153,7 @@ export const checkAccessTokenThunk = createAsyncThunk(
         };
 
         const response = await axios.get(
-            url, config
+            url, data, config
         );
 
         if (response.data.success) {
@@ -161,12 +178,15 @@ export const logoutUserThunk = createAsyncThunk(
     "userAuth/logoutUser",
     async (params, thunkAPI) => {
         const state = thunkAPI.getState();
+
         const url = getAuthServerURL() + "/users/logout";
+        const data = {};
+        const config = { withCredentials: true }
 
         const response = await axios.post(
             url,
-            {},
-            { withCredentials: true }
+            data,
+            config
         );
 
         return response.data;
@@ -223,10 +243,10 @@ const userAuthSlice = createSlice({
     initialState,
     reducers: {
         resetRegistrationThunkStatus: (state) => {
-            state.thunkStatuses.registration = thunkStatuses.idle;
+            state.thunkStatuses.registration = { status: thunkStatuses.idle, error: null };
         },
         resetLoginThunkStatus: (state) => {
-            state.thunkStatuses.login = thunkStatuses.idle;
+            state.thunkStatuses.login = { status: thunkStatuses.idle, error: null };
         },
         resetRefreshLoginThunkStatus: (state) => {
             state.thunkStatuses.refreshLogin = thunkStatuses.idle;
@@ -251,28 +271,28 @@ const userAuthSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(registerNewUserThunk.pending, (state, action) => {
-                state.thunkStatuses.registration = thunkStatuses.pending;
+                state.thunkStatuses.registration = { status: thunkStatuses.pending, error: null };
             })
             .addCase(registerNewUserThunk.rejected, (state, action) => {
-                state.thunkStatuses.registration = thunkStatuses.rejected;
+                state.thunkStatuses.registration = { status: thunkStatuses.rejected, error: action.payload.error };
             })
             .addCase(registerNewUserThunk.fulfilled, (state, action) => {
                 state.username = action.payload.username;
-                state.thunkStatuses.registration = thunkStatuses.fulfilled;
-            })
+                state.thunkStatuses.registration = { status: thunkStatuses.fulfilled, error: null };
+            }) // login user thunk
             .addCase(loginUserThunk.pending, (state, action) => {
-                state.thunkStatuses.login = thunkStatuses.pending;
+                state.thunkStatuses.login = { status: thunkStatuses.pending, error: null };
             })
             .addCase(loginUserThunk.rejected, (state, action) => {
-                state.thunkStatuses.login = thunkStatuses.rejected;
+                state.thunkStatuses.login = { status: thunkStatuses.rejected, error: "Incorrect username or password." };
             })
             .addCase(loginUserThunk.fulfilled, (state, action) => {
                 state.accessToken = action.payload.accessToken;
                 state.username = action.payload.username;
                 state.displayName = action.payload.displayName;
-                state.thunkStatuses.login = thunkStatuses.fulfilled;;
+                state.thunkStatuses.login = { status: thunkStatuses.fulfilled, error: null };
                 saveLoginDataToSS(action.payload.username, action.payload.accessToken, action.payload.displayName);
-            })
+            }) // logout user thunk
             .addCase(logoutUserThunk.pending, (state, action) => {
                 state.thunkStatuses.logout = thunkStatuses.pending;
             })
@@ -327,7 +347,7 @@ const userAuthSlice = createSlice({
             })
             .addCase(changeDisplayNameThunk.rejected, (state, action) => {
                 state.thunkStatuses.changeDisplayName.status = thunkStatuses.rejected;
-                if(action.payload.error){
+                if (action.payload.error) {
                     state.thunkStatuses.changeDisplayName.error = action.payload.error;
                 }
             })
@@ -349,9 +369,13 @@ export const getDisplayName = (state) => state.userAuthSlice.displayName;
 export const getUserAccessToken = (state) => state.userAuthSlice.accessToken;
 
 // thunk statuses
-export const getLoginThunkStatus = (state) => state.userAuthSlice.thunkStatuses.login;
+export const getLoginThunkStatus = (state) => state.userAuthSlice.thunkStatuses.login.status;
+export const getLoginThunkStatusError = (state) => state.userAuthSlice.thunkStatuses.login.error;
+
+export const getRegistrationThunkStatus = (state) => state.userAuthSlice.thunkStatuses.registration.status;
+export const getRegistrationThunkStatusError = (state) => state.userAuthSlice.thunkStatuses.registration.error;
+
 export const getRefreshLoginThunkStatus = (state) => state.userAuthSlice.thunkStatuses.refreshLogin;
-export const getRegistrationThunkStatus = (state) => state.userAuthSlice.thunkStatuses.registration;
 export const getLogoutThunkStatus = (state) => state.userAuthSlice.thunkStatuses.logout;
 export const getCheckAccessTokenThunkStatus = (state) => state.userAuthSlice.thunkStatuses.checkAccessToken;
 export const getChangeDisplayNameThunkStatus = (state) => state.userAuthSlice.thunkStatuses.changeDisplayName.status;
