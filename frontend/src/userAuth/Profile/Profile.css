@@ -1,0 +1,48 @@
+#profileRoot{
+    display: flex;
+    flex-direction: column;
+}
+
+#profileBodyRoot{
+    display: flex;
+    flex-direction: row;
+    box-sizing: border-box;
+    margin-top: 5rem;
+    flex-grow: 1;
+}
+
+#profileNav {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid light-dark(black, white);    
+} 
+
+#profileMain {
+    flex-grow: 1;
+    padding: 1rem;
+}
+
+.profileForm {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    gap: 1rem;
+}
+
+.errorMessageContainer {
+    width: fit-content;
+    height: fit-content;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    color: red;
+}
+
+.profileForm > button {
+    width: fit-content;
+    margin: 0;
+}
+
+.profileForm > hr {
+    width: 100%;
+}

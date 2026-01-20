@@ -1,0 +1,148 @@
+#root, #elementRoot{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    color-scheme: light dark;
+    overflow: hidden;
+    color: light-dark(black, white);
+}
+
+body {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;     
+}
+
+.verticalForm {
+    display: flex; 
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.verticalList {
+    display: flex; 
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-width: 1px;
+    border-style: solid;
+    border-color: light-dark(black, white);
+}
+
+.horizontalForm {
+    display: flex; 
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.centerDiv{
+    margin-top: 10rem;
+    text-align: center;    
+    display: flex; 
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}   
+
+.verticalForm > label {    
+    margin-top: 1.5rem;
+}
+
+label, button, input, .reactionButton {
+    font-size: 1rem;
+}
+
+button {
+    border-radius: 8px;
+    border: 2px solid transparent;
+    padding: .5rem;
+    margin: 1rem;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: light-dark(black, white);
+    color: light-dark(white, black);
+    cursor: pointer;
+    transition: border-color 0.25s;
+}
+
+button:hover {
+    border-color: light-dark(red, red);
+}
+
+.invertedButton {
+    background-color: light-dark(white, black);
+    color: light-dark(black, white);
+}
+
+button > a,  button > a:visited{
+    text-decoration: none;
+    color: light-dark(white, black);
+}
+
+.reactionButton {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-weight: 500;
+    font-family: inherit;
+    color: light-dark(black, white);
+    background-color: light-dark(white, black);
+    cursor: pointer;
+    transition: border-color 0.25s;
+}
+
+#root > div {
+    height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+#topBar {
+    position: fixed;
+    box-sizing: border-box;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 5rem;
+    background-color: light-dark(white, rgb(18, 18, 18));
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+/*
+    top, right, bottom, left    
+*/
+#bodyDiv {
+    height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+    padding: 6rem 1rem 8rem 1rem; 
+    background-color: light-dark(rgb(220, 220, 220), rgb(50, 50, 50));  
+    overflow: auto;  
+}
+
+#bottomBar {
+    position: fixed;
+    box-sizing: border-box;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    min-height: fit-content;
+    background-color: light-dark(white, rgb(18, 18, 18));
+    border-width: 1px;
+    border-style: solid;
+    border-color: light-dark(black, white);
+    background-color: light-dark(white, rgb(18, 18, 18));
+}

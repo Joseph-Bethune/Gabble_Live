@@ -1,0 +1,89 @@
+.messageLeafMain{
+    background-color: light-dark(white, black);
+    color: light-dark(black, white);
+    border: 1px solid light-dark(black,rgb(255, 255, 255));    
+    border-radius: 20px;
+    padding: 10px;
+    font-size: 1.2rem;
+    max-width: 600px;
+    height: fit-content;
+}
+
+#messageLeafHeader{
+    text-align: left;
+    padding: 10px 0 10px 0;
+    font-size: 1.5rem;
+}
+
+#messageLeafBody{
+    text-align: left;
+    padding-left: 2em;
+}
+
+#messageLeafFooter{
+    display: flex;
+    margin-top: 1em;
+}
+
+#messageLeafFooter > #timeStampSection{
+    width: 100%;
+    display: flex;
+    justify-self: flex-end;
+    align-self: flex-end;
+}
+
+#messageLeafFooter > #reactionSection{
+    width: 100%;
+    display: flex;
+    align-self: flex-start;
+    justify-self: flex-end;
+    align-content: flex-start;
+    justify-content: flex-end;
+}
+
+.reactionCounters{
+    margin: 0 5px 0 5px;
+    border-radius: 10px;
+    background-color: light-dark(black,rgb(240, 240, 240));
+    color: light-dark(white,black);
+    min-width: fit-content;
+}
+
+#reactionCounters:hover{
+    cursor: pointer;
+    background-color: light-dark(black,rgb(220, 220, 220));
+}
+
+#messageExpansionButton{
+    font-size: .8rem;
+    border-radius: 10px;
+    padding: .5em;
+    background-color: light-dark(black,rgb(240, 240, 240));
+    color: black;
+}
+
+#messageExpansionButton:hover{
+    cursor: pointer;
+    background-color: light-dark(black,rgb(220, 220, 220));
+}
+
+.highlightableLeaf:hover{
+    cursor: pointer;
+    background-color: light-dark(rgb(240, 240, 240), rgb(29, 29, 29));
+}
+
+#tagList {
+    margin-top: .5em;
+}
+
+.selectedLeaf {
+    background-color: rgb(0, 0, 210);
+}
+
+.unselectedLeaf {
+    background-color: light-dark(white, rgb(20,20,20));
+}
+
+.selectedLeaf:hover {
+    background-color: rgb(0,0,255);
+}

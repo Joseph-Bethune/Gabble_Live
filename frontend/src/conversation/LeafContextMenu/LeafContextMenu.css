@@ -1,0 +1,18 @@
+.messagePostContextRootDiv{
+    position: absolute;
+    color-scheme: light dark;
+    background-color: light-dark(white, rgb(50, 50, 50));
+    color: light-dark(black, white);
+    width: fit-content;
+    box-sizing: border-box;
+}
+
+.clickableElement {
+    height: fit-content;
+    padding: .1rem 2rem .1rem 2rem;
+    box-sizing: border-box;
+}
+
+.clickableElement:hover {
+    background-color: light-dark(white, rgb(125,125,125));
+}

@@ -1,0 +1,23 @@
+form{
+    display: inline;
+}
+
+.formDiv{
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
+    align-content: center;
+    width: 100%;
+}
+
+.replyToPostMode {
+    background-color: blue;
+}
+
+table button{
+    margin: 0;
+}
+
+td {
+    padding: .25rem;
+}
