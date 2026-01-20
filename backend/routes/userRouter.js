@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/register', userController.registerNewUser);
 router.post('/login', userController.handleLoginAttempt);
-router.get('/refreshLogin', verifyJWTRefreshToken, userController.handleRefreshToken);
+router.post('/refreshLogin', verifyJWTRefreshToken, userController.handleRefreshToken);
 router.post('/logout', verifyJWTRefreshToken, userController.handleLogout);
 router.post('/changeDisplayName', verifyJWTAccessToken, userController.changeDisplayName);
 router.get('/getUserInfo', userController.getUserInfo);

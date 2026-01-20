@@ -133,8 +133,6 @@ export const verifyJWTAccessToken = (req, res, next) => {
 export const verifyJWTRefreshToken = (req, res, next) => {
     if(!req.cookies) return res.status(401).json({success: false, error: "no cookies sent"});
 
-    console.log(JSON.stringify(req.cookies));
-
     const token = req.cookies?.jwtRefreshToken;
     if(!token) return res.status(401).json({success:false, message: "no refresh token"});
 

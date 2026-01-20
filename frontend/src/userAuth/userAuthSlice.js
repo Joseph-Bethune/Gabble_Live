@@ -14,17 +14,19 @@ const initialState = {
     accessToken: null,
     thunkStatuses: {
         login: { status: thunkStatuses.idle, error: null },
-        refreshLogin: thunkStatuses.idle,
+        refreshLogin: { status: thunkStatuses.idle, error: null },
         registration: { status: thunkStatuses.idle, error: null },
         logout: thunkStatuses.idle,
         checkAccessToken: thunkStatuses.idle,
         changeDisplayName: { status: thunkStatuses.idle, error: null },
+        setAuthStateFromStorage: { status: thunkStatuses.idle, error: null },
     },
     error: null
 };
 
 const getAuthServerURL = () => {
     let value = ""
+
     value = `${import.meta.env.VITE_BACKEND_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`;
 
     return value;
@@ -110,24 +112,27 @@ export const refreshLoginThunk = createAsyncThunk(
     async (params, thunkAPI) => {
         const state = thunkAPI.getState();
 
-        const token = state.userAuthSlice.accessToken;
-
         const url = getAuthServerURL() + "/users/refreshLogin";
         const data = {};
         const config = {
             withCredentials: true
         };
 
-        const response = await axios.get(
-            url, data, config
-        );
+        try {
+            const response = await axios.post(
+                url, data, config
+            );
+            return response.data;
 
-        return response.data;
+        } catch (err) {
+            return thunkAPI.rejectWithValue(err.response.data);
+        }
+
     },
     {
         condition: (_, { getState }) => {
             // prevents the thunk for executing when in the wrong state
-            const thunkStatus = getState().userAuthSlice.thunkStatuses.refreshLogin;
+            const thunkStatus = getState().userAuthSlice.thunkStatuses.refreshLogin.status;
             if (thunkStatus == thunkStatuses.idle || thunkStatus == thunkStatus.rejected) {
                 return true;
             }
@@ -236,6 +241,27 @@ export const changeDisplayNameThunk = createAsyncThunk(
     }
 )
 
+export const setAuthStateFromStorageThunk = createAsyncThunk(
+    "userAuth/setAuthStateFromStorage",
+    async (params, thunkAPI) => {
+
+        const state = thunkAPI.getState();
+
+        return getLoginDataFromSS();
+    },
+    {
+        condition: (_, { getState }) => {
+            // prevents the thunk for executing when in the wrong state
+            const thunkStatus = getState().userAuthSlice.thunkStatuses.setAuthStateFromStorage.status;
+            if (thunkStatus == thunkStatuses.idle || thunkStatus == thunkStatus.rejected) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+)
+
 //#endregion
 
 const userAuthSlice = createSlice({
@@ -249,7 +275,7 @@ const userAuthSlice = createSlice({
             state.thunkStatuses.login = { status: thunkStatuses.idle, error: null };
         },
         resetRefreshLoginThunkStatus: (state) => {
-            state.thunkStatuses.refreshLogin = thunkStatuses.idle;
+            state.thunkStatuses.refreshLogin = { status: thunkStatuses.idle, error: null };
         },
         resetLogoutThunkStatus: (state) => {
             state.thunkStatuses.logout = thunkStatuses.idle;
@@ -266,6 +292,9 @@ const userAuthSlice = createSlice({
         },
         resetChangeDisplayNameThunkStatus: (state) => {
             state.thunkStatuses.changeDisplayName.status = thunkStatuses.idle;
+        },
+        resetSetAuthStateFromStorageThunkStatus: (state) => {
+            state.thunkStatuses.setAuthStateFromStorage = { status: thunkStatuses.idle, error: null };
         },
     },
     extraReducers: (builder) => {
@@ -329,10 +358,10 @@ const userAuthSlice = createSlice({
                 state.thunkStatuses.checkAccessToken = thunkStatuses.fulfilled;
             }) // refresh login thunk below
             .addCase(refreshLoginThunk.pending, (state, action) => {
-                state.thunkStatuses.refreshLogin = thunkStatuses.pending;
+                state.thunkStatuses.refreshLogin = { status: thunkStatuses.pending, error: null };
             })
             .addCase(refreshLoginThunk.rejected, (state, action) => {
-                state.thunkStatuses.refreshLogin = thunkStatuses.rejected;
+                state.thunkStatuses.refreshLogin = { status: thunkStatuses.rejected, error: action.payload.error };
             })
             .addCase(refreshLoginThunk.fulfilled, (state, action) => {
                 state.accessToken = action.payload.accessToken;
@@ -340,7 +369,7 @@ const userAuthSlice = createSlice({
                 state.displayName = action.payload.displayName;
                 saveLoginDataToSS(action.payload.username, action.payload.accessToken, action.payload.displayName);
 
-                state.thunkStatuses.refreshLogin = thunkStatuses.fulfilled;
+                state.thunkStatuses.refreshLogin = { status: thunkStatuses.fulfilled, error: null };
             })// change display name thunk
             .addCase(changeDisplayNameThunk.pending, (state, action) => {
                 state.thunkStatuses.changeDisplayName.status = thunkStatuses.pending;
@@ -359,11 +388,29 @@ const userAuthSlice = createSlice({
                 }
                 state.thunkStatuses.changeDisplayName.status = thunkStatuses.fulfilled;
                 state.thunkStatuses.changeDisplayName.error = null;
+            }) // set auth state thunk
+            .addCase(setAuthStateFromStorageThunk.pending, (state, action) => {
+                state.thunkStatuses.setAuthStateFromStorage = { status: thunkStatuses.pending, error: null };
+            })
+            .addCase(setAuthStateFromStorageThunk.rejected, (state, action) => {
+                state.thunkStatuses.setAuthStateFromStorage = { status: thunkStatuses.rejected, error: null };
+            })
+            .addCase(setAuthStateFromStorageThunk.fulfilled, (state, action) => {
+                if(action.payload.isLoggedIn){
+                    state.accessToken = action.payload.accessToken;
+                    state.displayName = action.payload.displayName;
+                    state.username = action.payload.username;
+                }
+                state.thunkStatuses.setAuthStateFromStorage = { status: thunkStatuses.fulfilled, error: null };
             })
     }
 });
 
-export const isLoggedIn = (state) => (state.userAuthSlice.username != null && state.userAuthSlice.accessToken != null);
+export const isLoggedIn = (state) => {
+    const hasUsername = state.userAuthSlice.username != null;
+    const hasAccessToken = state.userAuthSlice.accessToken != null;
+    return hasUsername && hasAccessToken;
+};
 export const getUserName = (state) => state.userAuthSlice.username;
 export const getDisplayName = (state) => state.userAuthSlice.displayName;
 export const getUserAccessToken = (state) => state.userAuthSlice.accessToken;
@@ -375,7 +422,12 @@ export const getLoginThunkStatusError = (state) => state.userAuthSlice.thunkStat
 export const getRegistrationThunkStatus = (state) => state.userAuthSlice.thunkStatuses.registration.status;
 export const getRegistrationThunkStatusError = (state) => state.userAuthSlice.thunkStatuses.registration.error;
 
-export const getRefreshLoginThunkStatus = (state) => state.userAuthSlice.thunkStatuses.refreshLogin;
+export const getRefreshLoginThunkStatus = (state) => state.userAuthSlice.thunkStatuses.refreshLogin.status;
+export const getRefreshLoginThunkStatusError = (state) => state.userAuthSlice.thunkStatuses.refreshLogin.error;
+
+export const getAuthStateThunkStatus = (state) => state.userAuthSlice.thunkStatuses.setAuthStateFromStorage.status;
+export const getAuthStateThunkStatusError = (state) => state.userAuthSlice.thunkStatuses.setAuthStateFromStorage.error;
+
 export const getLogoutThunkStatus = (state) => state.userAuthSlice.thunkStatuses.logout;
 export const getCheckAccessTokenThunkStatus = (state) => state.userAuthSlice.thunkStatuses.checkAccessToken;
 export const getChangeDisplayNameThunkStatus = (state) => state.userAuthSlice.thunkStatuses.changeDisplayName.status;
@@ -388,6 +440,7 @@ export const {
     resetLogoutThunkStatus,
     resetCheckAccessTokenThunkStatus,
     resetChangeDisplayNameThunkStatus,
+    resetSetAuthStateFromStorageThunkStatus,
     setStateFromSessionStorage, } = userAuthSlice.actions;
 
 export default userAuthSlice.reducer;

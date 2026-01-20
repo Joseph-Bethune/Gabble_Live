@@ -1,7 +1,7 @@
 import {getIPv4Address} from '../server.js'
 
 export const allowedOrigins = () => [
-    `http://${getIPv4Address()}:${process.env.VITE_BACKEND_PORT}`,
+    `http://${getIPv4Address()}:${process.env.PORT}`,
     `http://localhost:${process.env.FRONTEND_PORT}`
 ];
 

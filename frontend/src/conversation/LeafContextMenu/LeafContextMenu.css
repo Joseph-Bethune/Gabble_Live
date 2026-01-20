@@ -5,6 +5,7 @@
     color: light-dark(black, white);
     width: fit-content;
     box-sizing: border-box;
+    padding: 1rem;
 }
 
 .clickableElement {
@@ -15,4 +16,5 @@
 
 .clickableElement:hover {
     background-color: light-dark(white, rgb(125,125,125));
+    cursor: pointer;
 }

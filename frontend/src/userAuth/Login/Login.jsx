@@ -2,7 +2,8 @@ import { useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { thunkStatuses, setStateFromSessionStorage, } from '../userAuthSlice.js';
 import { checkAccessTokenThunk, getCheckAccessTokenThunkStatus, resetCheckAccessTokenThunkStatus, } from '../userAuthSlice.js';
-import { refreshLoginThunk, getRefreshLoginThunkStatus, resetRefreshLoginThunkStatus, } from '../userAuthSlice.js';
+import { refreshLoginThunk, resetRefreshLoginThunkStatus, getRefreshLoginThunkStatus, getRefreshLoginThunkStatusError } from '../userAuthSlice.js';
+import { setAuthStateFromStorageThunk, getAuthStateThunkStatus, getAuthStateThunkStatusError, resetSetAuthStateFromStorageThunkStatus } from '../userAuthSlice.js';
 import {
     loginUserThunk, getLoginThunkStatus, getLoginThunkStatusError, resetLoginThunkStatus,
     isLoggedIn, getUserAccessToken, getUserName,
@@ -27,14 +28,12 @@ const Login = (props) => {
     const [pwdFocus, setPwdFocus] = useState(false);
     const [validPwd, setValidPwd] = useState(false);
 
-    const checkAccessTokenThunkStatus = useSelector(getCheckAccessTokenThunkStatus);
-    const refreshLoginThunkStatus = useSelector(getRefreshLoginThunkStatus);
     const isLoggedIn_redux = useSelector(isLoggedIn);
     const accessToken_redux = useSelector(getUserAccessToken);
 
     useEffect(() => {
 
-        dispatch(setStateFromSessionStorage());
+        dispatch(setAuthStateFromStorageThunk());
 
         if (props.username) {
             setUserName(props.username);
@@ -48,38 +47,6 @@ const Login = (props) => {
     }, []);
 
     useEffect(() => {
-        if (!isLoggedIn_redux) {
-            if (accessToken_redux != null) {
-                dispatch(checkAccessTokenThunk());
-            }
-        } else {
-            navigate('/user/');
-        }
-
-    }, [isLoggedIn_redux, accessToken_redux]);
-
-    useEffect(() => {
-        if (checkAccessTokenThunkStatus == thunkStatuses.fulfilled) {
-            dispatch(resetCheckAccessTokenThunkStatus());
-            if (isLoggedIn_redux) {
-                navigate('/user/');
-            }
-        } else if (checkAccessTokenThunkStatus == thunkStatuses.rejected) {
-            dispatch(resetCheckAccessTokenThunkStatus());
-            dispatch(refreshLoginThunk());
-        }
-    }, [checkAccessTokenThunkStatus]);
-
-    useEffect(() => {
-        dispatch(resetRefreshLoginThunkStatus());
-        if (refreshLoginThunkStatus == thunkStatuses.fulfilled) {
-            if (isLoggedIn_redux) {
-                navigate('/user/');
-            }
-        }
-    }, [refreshLoginThunkStatus]);
-
-    useEffect(() => {
         const result = userName && userName.length > 0;
         setValidName(result);
     }, [userName]);
@@ -90,10 +57,79 @@ const Login = (props) => {
 
     }, [pwd]);
 
+    //#region handlers
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         dispatch(loginUserThunk({ username: userName, password: pwd }));
     }
+
+    //#endregion
+
+    //#region authstate from storage thunk data
+
+    const authStateFromStorageThunkStatus = useSelector(getAuthStateThunkStatus);
+
+    useEffect(() => {
+        if (authStateFromStorageThunkStatus == thunkStatuses.fulfilled) {
+            if (!isLoggedIn_redux) {
+                if (accessToken_redux != null) {
+                    dispatch(checkAccessTokenThunk());
+                } else {
+                    dispatch(refreshLoginThunk());
+                }
+            } else {
+                navigate('/user/');
+            }
+        }
+
+        if (authStateFromStorageThunkStatus == thunkStatuses.fulfilled || authStateFromStorageThunkStatus != thunkStatuses.rejected) {
+            dispatch(resetSetAuthStateFromStorageThunkStatus());
+        }
+    }, [authStateFromStorageThunkStatus]);
+
+    //#endregion
+
+    //#region check access token thunk data
+
+    const checkAccessTokenThunkStatus = useSelector(getCheckAccessTokenThunkStatus);
+
+    useEffect(() => {
+        if (checkAccessTokenThunkStatus == thunkStatuses.fulfilled) {
+            if (isLoggedIn_redux) {
+                navigate('/user/');
+            } else {
+                dispatch(refreshLoginThunk());
+            }
+        } else if (checkAccessTokenThunkStatus == thunkStatuses.rejected) {
+            dispatch(refreshLoginThunk());
+        }
+
+        if (checkAccessTokenThunkStatus != thunkStatuses.idle && checkAccessTokenThunkStatus != thunkStatuses.pending) {
+            dispatch(resetCheckAccessTokenThunkStatus());
+        }
+    }, [checkAccessTokenThunkStatus]);
+
+    //#endregion
+
+    //#region refresh login thunk data
+
+    const refreshLoginThunkStatus = useSelector(getRefreshLoginThunkStatus);
+    const refreshLoginThunkError = useSelector(getRefreshLoginThunkStatusError);
+
+    useEffect(() => {
+        if (refreshLoginThunkStatus == thunkStatuses.fulfilled) {
+            if (isLoggedIn_redux) {
+                navigate('/user/');
+            }
+        }
+
+        if (refreshLoginThunkStatus != thunkStatuses.idle && refreshLoginThunkStatus != thunkStatuses.pending) {
+            dispatch(resetRefreshLoginThunkStatus());
+        }
+    }, [refreshLoginThunkStatus]);
+
+    //#endregion
 
     //#region login thunk status and error message
 
@@ -121,7 +157,7 @@ const Login = (props) => {
         }
     }, [loginThunkStatus]);
 
-    //#endrgion
+    //#endregion
 
     //#region links
 
