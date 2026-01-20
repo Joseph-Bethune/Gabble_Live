@@ -19,7 +19,7 @@ defaultRouter.get('/', (req, res) => {
 
 const rootRouter = express.Router();
 
-rootRouter.use('/', defaultRouter);
+//rootRouter.use('/', defaultRouter);
 rootRouter.use(userRouter.path, userRouter.router);
 rootRouter.use(postRouter.path, postRouter.router);
 

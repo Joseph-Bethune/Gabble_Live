@@ -1,7 +1,8 @@
 # Required backend environment variables
 ## Backend Server Info
     PORT : (quotes not neccessary)
-    IPV4_ADDRESS : (quotes not neccessary)
+    IPV4_ADDRESS : 
+    NODE_ENV : (can only accept values of "production" or "dev", quotes required)
 ## Frontend Server Info
     FRONTEND_PORT
 ## MongoDB
@@ -14,7 +15,7 @@
     MONGODB_DATABASE_NAME
     MONGODB_USERNAME
     MONGODB_PASSWORD
-    MONGODB_REMOTE_MODE : (can only accept values of "true" or "false")
+    MONGODB_REMOTE_MODE : (can only accept values of "true" or "false", quotes required)
 ## JWT
     ACCESS_TOKEN_SECRET
     REFRESH_TOKEN_SECRET

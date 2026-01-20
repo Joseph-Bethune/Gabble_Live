@@ -10,6 +10,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { loggerMiddleware } from './middleware/eventLogger.js';
 import { checkRoles } from './models/UserRoles.js';
 import rootRouter from './routes/rootRouter.js';
+import path from "path";
 
 const app = express();
 dotenv.config();
@@ -65,8 +66,8 @@ function applyCorsMiddleWare() {
 //#region start server
 
 const startServer = () => {
-    const port = process.env.PORT;
-    let ipAddress = process.env.IPV4_ADDRESS;
+    const port = process.env.PORT || 8080;
+    let ipAddress = process.env.IPV4_ADDRESS || '0.0.0.0';
     app.listen(port, ipAddress, () => {
         ipAddress = getIPv4Address();
         console.log(`Server is running at address ${ipAddress} on port ${port}.`);
@@ -100,6 +101,26 @@ function applyRoutes() {
 
 //#endregion
 
+//#region frontend linking middleware
+
+const __dirname = path.resolve();
+
+const applyFrontendLinkingMiddleware = () => {
+    const dest = path.join(__dirname, "../frontend/dist");
+
+    app.use(express.static(dest));
+}
+
+const applyFrontendLinkingRoutes = () => {
+    const dest = path.join(__dirname, "../frontend", "dist", "index.html");
+    
+    app.get(/(.*)/, (req, res) => {
+        res.sendFile(dest);
+    });
+}
+
+//#endregion
+
 //#region main exectuion
 
 const setupAndStartServer = () => {
@@ -107,10 +128,16 @@ const setupAndStartServer = () => {
         checkRoles();
         applyRequestBodyMiddleware();
         applyMiddlewareForCookies();
-        applyCorsMiddleWare();
+        if (process.env.NODE_ENV != "production") {
+            applyCorsMiddleWare();
+        }
         applyErrorHandlerMiddleware();
         applyLoggerMiddleware();
         applyRoutes();
+        if (process.env.NODE_ENV == "production") {
+            applyFrontendLinkingMiddleware();
+            applyFrontendLinkingRoutes();
+        }
         startServer();
     } catch (exception) {
         console.log('There was an exception/error: ', exception);
@@ -128,4 +155,4 @@ const main = () => {
 
 main();
 
-//endregion
+//#endregion
