@@ -1,7 +1,7 @@
 # Required backend environment variables
 ## Backend Server Info
-    PORT (quotes not neccessary)
-    IPV4_ADDRESS (quotes not neccessary)
+    PORT : (quotes not neccessary)
+    IPV4_ADDRESS : (quotes not neccessary)
 ## Frontend Server Info
     FRONTEND_PORT
 ## MongoDB
@@ -14,9 +14,10 @@
     MONGODB_DATABASE_NAME
     MONGODB_USERNAME
     MONGODB_PASSWORD
-    MONGODB_REMOTE_MODE ("true" or "false")
+    MONGODB_REMOTE_MODE : (can only accept values of "true" or "false")
 ## JWT
     ACCESS_TOKEN_SECRET
     REFRESH_TOKEN_SECRET
-## Note
-    If MONGODB_REMOTE_MODE is "true", then you don't need to include the environment variables associated with the "Local MongoDB Server", and vise versa if the variable is set to false
+## Notes
+* If MONGODB_REMOTE_MODE is "true", then you don't need to include the environment variables associated with the "Local MongoDB Server", and vise versa if the variable is set to false.
+* All expected values are strings (and thus require quotation marks) unless specified otherwise.
