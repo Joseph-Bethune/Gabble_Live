@@ -2,7 +2,7 @@ import {getIPv4Address} from '../server.js'
 
 export const allowedOrigins = () => [
     `http://${getIPv4Address()}:${process.env.PORT}`,
-    `http://localhost:${process.env.FRONTEND_PORT}`
+    `http://localhost:${process.env.FRONTEND_PORT}`,
 ];
 
 export const corsOptions = {
@@ -15,12 +15,20 @@ export const corsOptions = {
     }
 };
 
-export const credentials = (req, res, next) => {
+export const credentials_dev = (req, res, next) => {    
     const origin = req.headers?.origin;
     if(allowedOrigins().includes(origin)){
         if(!req.headersSent) {
             res.header('Access-Control-Allow-Credentials', true);
         }
+    }
+    next();
+}
+
+export const credentials = (req, res, next) => {
+    if(!req.headersSent) {
+        //res.header('Access-Control-Allow-Credentials', true);
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
     }
     next();
 }

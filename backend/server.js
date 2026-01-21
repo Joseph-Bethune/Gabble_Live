@@ -5,7 +5,8 @@ import mongoose from 'mongoose';
 import connectToMongoDB from './databaseConnections/MongoDB.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import { corsOptions, credentials } from './middleware/corsOptions.js';
+import { corsOptions, credentials, credentials_dev } from './middleware/corsOptions.js';
+import { corsMiddleware } from './middleware/corsMiddleware.js'
 import { errorHandler } from './middleware/errorHandler.js';
 import { loggerMiddleware } from './middleware/eventLogger.js';
 import { checkRoles } from './models/UserRoles.js';
@@ -57,8 +58,7 @@ function applyMiddlewareForCookies() {
 //#region cors middleware
 
 function applyCorsMiddleWare() {
-    app.use(credentials);
-    app.use(cors(corsOptions));
+    app.use(corsMiddleware({allowAll: true}));
 }
 
 //#endregion
