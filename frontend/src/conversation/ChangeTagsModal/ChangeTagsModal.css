@@ -16,7 +16,9 @@
     transform: translate(-50%, -50%);
     background-color: light-dark(white, black);
     color: light-dark(black, white);
-    padding: 5px;
+    padding: 2rem;
+    border-radius: 20px;
+    border: 1px solid light-dark(black, white);
     z-index: 1000;
 }
 

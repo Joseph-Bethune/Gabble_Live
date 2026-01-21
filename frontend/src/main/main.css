@@ -62,7 +62,7 @@ label, button, input, .reactionButton {
 
 button {
     border-radius: 8px;
-    border: 2px solid transparent;
+    border: 2px solid light-dark(black, white);
     padding: .5rem;
     margin: 1rem;
     font-weight: 500;
@@ -114,7 +114,7 @@ button > a,  button > a:visited{
     left: 0;
     width: 100%;
     min-height: 5rem;
-    background-color: light-dark(white, rgb(18, 18, 18));
+    background-color: light-dark(rgb(230,230,230), rgb(20, 20, 20));
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -129,7 +129,7 @@ button > a,  button > a:visited{
     width: 100vw;
     box-sizing: border-box;
     padding: 6rem 1rem 8rem 1rem; 
-    background-color: light-dark(rgb(220, 220, 220), rgb(50, 50, 50));  
+    background-color: light-dark(rgb(200, 200, 200), rgb(50, 50, 50));  
     overflow: auto;  
 }
 
