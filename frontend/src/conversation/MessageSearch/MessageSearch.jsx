@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { isLoggedIn, setStateFromSessionStorage, getDisplayName } from '../../userAuth/userAuthSlice.js';
-import { rootMessageSearchThunk, getRootMessageSearchThunkStatus, resetRootSearchThunkStatus, getRootPosts } from '../postDatabaseSlice.js';
+import { rootMessageSearchThunk, getRootMessageSearchThunkStatus, resetRootSearchThunkStatus, getRootPosts, clearRootPosts, clearPosts } from '../postDatabaseSlice.js';
 import { thunkStatuses } from '../postDatabaseSlice.js';
 import { getSendMessageThunkStatus, resetSendMessageThunkStatus } from '../postDatabaseSlice.js';
 import ConversationLeaf from '../conversationLeaf/ConversationLeaf.jsx';
@@ -27,18 +27,20 @@ const MessageSearchPage = () => {
 
     const postToReplyTo = useSelector(getReplyTargetPostId);
     const isLoggedIn_redux = useSelector(isLoggedIn);
-    const getDisplayName_redux = useSelector(getDisplayName);    
+    const getDisplayName_redux = useSelector(getDisplayName);
 
     const handleSearchSubmit = async (e) => {
         e.preventDefault();
         executeSearch();
-    }    
+    }
 
     useEffect(() => {
+        dispatch(clearRootPosts());
+        setDisplayPosts(null);
         dispatch(setStateFromSessionStorage());
-        dispatch(setMessageSearchMode({newMode: true}));
-        dispatch(setReplyTargetPostId({postId: null}));
-        dispatch(setRootPostId({rootPostId: null}));
+        dispatch(setMessageSearchMode({ newMode: true }));
+        dispatch(setReplyTargetPostId({ postId: null }));
+        dispatch(setRootPostId({ rootPostId: null }));        
     }, []);
 
     useEffect(() => {
@@ -73,15 +75,17 @@ const MessageSearchPage = () => {
     }
 
     const executeSearch = () => {
-        const searchObject = parseSearchString(searchText);
-        dispatch(rootMessageSearchThunk(searchObject));
+        if(searchText && searchText.length > 0){
+            const searchObject = parseSearchString(searchText);
+            dispatch(rootMessageSearchThunk(searchObject));
+        }
     }
 
     useEffect(() => {
         if (rootMessageSearchThunkStatus == thunkStatuses.fulfilled) {
             setDisplayPosts(generateRootPostDisplay());
         }
-        if(rootMessageSearchThunkStatus != thunkStatuses.pending && rootMessageSearchThunkStatus != thunkStatuses.idle){
+        if (rootMessageSearchThunkStatus != thunkStatuses.pending && rootMessageSearchThunkStatus != thunkStatuses.idle) {
             dispatch(resetRootSearchThunkStatus());
         }
     }, [rootMessageSearchThunkStatus]);
@@ -91,17 +95,21 @@ const MessageSearchPage = () => {
     }, [postToReplyTo])
 
     const generateRootPostDisplay = () => {
-        const output = Object.values(rootPosts).map((element) => {
-            return <ConversationLeaf
-                key={element.id}
-                id={element.id}
-                postId={element.id}
-                highlightable={true}
-                leafBodyClickHandlerDelegate={() => handleLeafBodyClick(element.id)}
-                replyClickHandlerDelegate={replyClickHandlerDelegate}
-                contextMenuDelegate={openMessagePostContextMenuDelegate}
-            />
-        })
+        let output = null;
+        if (rootPosts) {
+            output = Object.values(rootPosts).map((element) => {
+                return <ConversationLeaf
+                    key={element.id}
+                    id={element.id}
+                    postId={element.id}
+                    highlightable={true}
+                    leafBodyClickHandlerDelegate={() => handleLeafBodyClick(element.id)}
+                    replyClickHandlerDelegate={replyClickHandlerDelegate}
+                    contextMenuDelegate={openMessagePostContextMenuDelegate}
+                />
+            });
+        }
+
         if (output && output.length > 0) {
             return output;
         } else {
@@ -249,7 +257,7 @@ const MessageSearchPage = () => {
             <div id="bodyDiv" className="searchResults">
                 {displayPosts}
             </div>
-            <div id="bottomBar" style={{ display: 'flex', flexDirection: 'column'}}>                
+            <div id="bottomBar" style={{ display: 'flex', flexDirection: 'column' }}>
                 <NewMessageForm
                     cancelReplyModeDelegate={cancelReplyModeDelegate}
                 />

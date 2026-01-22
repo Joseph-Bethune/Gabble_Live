@@ -296,6 +296,12 @@ const postDatabaseSlice = createSlice({
         resetChangeTagsThunkStatus: (state) => {
             state.thunkStatuses.changeTags = { status: thunkStatuses.idle, error: null };
         },
+        clearRootPosts: (state) => {
+            state.rootPosts = {};
+        },
+        clearPosts: (state) => {
+            state.posts = {};
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -397,7 +403,7 @@ export const getChangeTagsThunkStatusError = (state) => state.postDatabaseSlice.
 
 export const {
     resetRootSearchThunkStatus, resetIdSearchThunkStatus, resetChangeLikeStatusThunkStatus, resetSendMessageThunkStatus,
-    resetLeafUpdateStatus, resetChangeTagsThunkStatus
+    resetLeafUpdateStatus, resetChangeTagsThunkStatus, clearRootPosts, clearPosts
 } = postDatabaseSlice.actions;
 
 export default postDatabaseSlice.reducer;

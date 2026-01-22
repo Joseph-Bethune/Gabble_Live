@@ -138,7 +138,10 @@ const NewMessageForm = (props) => {
 
     const updateToggleButtonDisplay = () => {
         if (isLoggedIn_redux) {
-            if (!conversationMode) {
+            if (conversationMode){
+                setFormToggleButtonClasses("hidden");
+            } else {
+                setFormToggleButtonClasses("formButton invertedButton toggleButton");
                 if (isReplyingToPost || showForm) {
                     setFormToggleButtonClasses("formButton invertedButton toggleButton");
                 }
@@ -150,11 +153,9 @@ const NewMessageForm = (props) => {
                 } else {
                     setFormToggleButtonText("Post New Message");
                 }
-            } else {
-                setFormToggleButtonClasses("formButton invertedButton toggleButton");
             }
         } else {
-            //setFormToggleButtonClasses("hidden");
+            setFormToggleButtonClasses("hidden");
         }
     }
 

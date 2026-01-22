@@ -108,13 +108,14 @@ const findPost = async (req, res) => {
 
     if (postIds) {
              
-        const foundPosts = await Promise.all(postIds.map(async (ele) => {
-            const initialPost = await PostModel.findById(ele).exec(); 
-            return generatePostOutputObject(initialPost, userFromToken);
+        const foundPosts = await PostModel.find({ _id: { $in: postIds} }).sort({updatedAt:1}).exec();
+        
+        const formattedPosts = await Promise.all(foundPosts.map(async (post) => {             
+            return generatePostOutputObject(post, userFromToken);
         }));
         
-        if (foundPosts) {
-            return res.status(200).json({ success: true, posts: foundPosts })
+        if (formattedPosts) {
+            return res.status(200).json({ success: true, posts: formattedPosts })
         } else {
             return res.status(200).json({ success: true, message: `No post found with object id of ${postIds}.` });
         }
@@ -139,7 +140,7 @@ const findPost = async (req, res) => {
             }
         }
 
-        const foundPosts = await PostModel.find(searchCriteria).exec();
+        const foundPosts = await PostModel.find(searchCriteria).sort({updatedAt:1}).exec();
 
         const outputArray = await Promise.all(foundPosts.map((post) => generatePostOutputObject(post, userFromToken)));
 

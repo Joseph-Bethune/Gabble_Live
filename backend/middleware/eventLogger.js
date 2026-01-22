@@ -16,7 +16,7 @@ export function logEvent(message) {
 }
 
 const generateLogStringFromHttpRequest = (req) => {
-    return `Domain: ${req.domain}\tIp Address: ${req.socket.remoteAddress}\tMethod: ${req.method}\tRequested URL: ${req.originalUrl}`;
+    return `Domain: ${req.domain}\tIp Address: ${req.socket.remoteAddress}\tMethod: ${req.method}\tRequested URL: ${req.originalUrl}\tRequest Body: ${JSON.stringify(req.body)}`;
 }
 
 const generateLogStringFromHttpResponse = (res) => {

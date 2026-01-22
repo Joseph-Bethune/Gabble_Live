@@ -67,11 +67,6 @@
     background-color: light-dark(black,rgb(220, 220, 220));
 }
 
-.unselectedHighlightableLeaf:hover{
-    cursor: pointer;
-    background-color: light-dark(rgb(240, 240, 240), rgb(29, 29, 29));
-}
-
 #tagList {
     margin-top: .5em;
 }
@@ -84,7 +79,16 @@
     background-color: light-dark(white, rgb(20,20,20));
 }
 
+.selectedHighlightableLeaf {
+    background-color: light-dark(rgb(250, 250, 0),rgb(0, 0, 250));
+}
+
 .selectedHighlightableLeaf:hover {
     cursor: pointer;
     background-color: light-dark(rgb(210, 210, 0),rgb(0, 0, 210));
+}
+
+.unselectedHighlightableLeaf:hover{
+    cursor: pointer;
+    background-color: light-dark(rgb(240, 240, 240), rgb(29, 29, 29));
 }
