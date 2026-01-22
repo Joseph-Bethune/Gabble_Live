@@ -94,7 +94,7 @@ function applyLoggerMiddleware() {
 //#region routes
 
 function applyRoutes() {
-    app.use('/', rootRouter);
+    app.use('/api', rootRouter);
 }
 
 //#endregion
