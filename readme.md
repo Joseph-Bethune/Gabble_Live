@@ -22,5 +22,5 @@
 * All expected values are strings (and thus require quotation marks) unless specified otherwise.
 # Required frontend environment variables
 ## Frontend Server Info
-VITE_BACKEND_DOMAIN : (domain of the backend server)
-VITE_BACKEND_PORT : (port of the backend server, will match the value above)
+    VITE_BACKEND_DOMAIN : (domain of the backend server)
+    VITE_BACKEND_PORT : (port of the backend server, will match the value above)
