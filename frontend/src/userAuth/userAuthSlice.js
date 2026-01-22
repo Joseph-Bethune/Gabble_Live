@@ -27,7 +27,7 @@ const initialState = {
 const getAuthServerURL = () => {
     let value = ""
 
-    value = `${import.meta.env.VITE_BACKEND_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`;
+    value = `${import.meta.env.VITE_BACKEND_DOMAIN}`;
 
     return value;
 }

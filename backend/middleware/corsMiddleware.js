@@ -1,9 +1,7 @@
 import { getIPv4Address } from '../server.js';
 import { logEvent } from './eventLogger.js';
 
-export const allowedOrigins = () => [
-    `http://${getIPv4Address()}:${process.env.PORT}`,
-    `http://localhost:${process.env.FRONTEND_PORT}`,
+export const allowedOrigins = () => [    
 ];
 
 export const corsMiddleware = (options = {}) => {

@@ -18,7 +18,7 @@ export const postLikeStatuses = {
 };
 
 const getAuthServerURL = () => {
-    return `${import.meta.env.VITE_BACKEND_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`
+    return `${import.meta.env.VITE_BACKEND_DOMAIN}`
 }
 
 //#region thunks

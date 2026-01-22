@@ -4,11 +4,9 @@ import os from 'os';
 import mongoose from 'mongoose';
 import connectToMongoDB from './databaseConnections/MongoDB.js';
 import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import { corsOptions, credentials, credentials_dev } from './middleware/corsOptions.js';
 import { corsMiddleware } from './middleware/corsMiddleware.js'
 import { errorHandler } from './middleware/errorHandler.js';
-import { loggerMiddleware } from './middleware/eventLogger.js';
+import { logEvent, loggerMiddleware } from './middleware/eventLogger.js';
 import { checkRoles } from './models/UserRoles.js';
 import rootRouter from './routes/rootRouter.js';
 import path from "path";
@@ -67,11 +65,11 @@ function applyCorsMiddleWare() {
 
 const startServer = () => {
     const port = process.env.PORT || 8080;
-    let ipAddress = process.env.IPV4_ADDRESS || '0.0.0.0';
-    app.listen(port, ipAddress, () => {
-        ipAddress = getIPv4Address();
+    app.listen(port, () => {
+        let ipAddress = getIPv4Address();
         console.log(`Server is running at address ${ipAddress} on port ${port}.`);
         console.log(`>>>> http://${ipAddress}:${port} <<<<`);
+        logEvent("Server Started.");
     });
 }
 
