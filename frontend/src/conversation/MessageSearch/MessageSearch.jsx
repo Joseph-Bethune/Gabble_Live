@@ -12,7 +12,7 @@ import NewMessageForm from '../newMessageForm/NewMessageForm.jsx';
 import ChangeTagsModal from '../ChangeTagsModal/ChangeTagsModal.jsx';
 import LeafContextMenu from '../LeafContextMenu/LeafContextMenu.jsx';
 import './MessageSearch.css'
-import { getReplyTargetPostId, setConversationMode, setReplyTargetPostId, setRootPostId } from '../conversationSlice.js';
+import { getReplyTargetPostId, setConversationMode, setMessageSearchMode, setReplyTargetPostId, setRootPostId } from '../conversationSlice.js';
 
 const MessageSearchPage = () => {
     const dispatch = useDispatch();
@@ -36,7 +36,7 @@ const MessageSearchPage = () => {
 
     useEffect(() => {
         dispatch(setStateFromSessionStorage());
-        dispatch(setConversationMode({newMode: false}));
+        dispatch(setMessageSearchMode({newMode: true}));
         dispatch(setReplyTargetPostId({postId: null}));
         dispatch(setRootPostId({rootPostId: null}));
     }, []);
@@ -217,7 +217,7 @@ const MessageSearchPage = () => {
     //#endregion
 
     return (
-        <div id="elementRoot" onContextMenu={(e) => contextMenuBaseClick(e)} onClick={(e) => baseClick(e)}>
+        <div id="pageRoot" onContextMenu={(e) => contextMenuBaseClick(e)} onClick={(e) => baseClick(e)}>
             <title>Search</title>
             <LeafContextMenu
                 data={messagePostContextMenuData}
@@ -249,7 +249,7 @@ const MessageSearchPage = () => {
             <div id="bodyDiv" className="searchResults">
                 {displayPosts}
             </div>
-            <div id="bottomBar" style={{ display: 'flex', flexDirection: 'column' }}>                
+            <div id="bottomBar" style={{ display: 'flex', flexDirection: 'column'}}>                
                 <NewMessageForm
                     cancelReplyModeDelegate={cancelReplyModeDelegate}
                 />

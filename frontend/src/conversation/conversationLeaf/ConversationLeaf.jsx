@@ -9,7 +9,7 @@ import { resetLeafUpdateStatus } from '../postDatabaseSlice.js';
 import { getDisplayName, isLoggedIn } from '../../userAuth/userAuthSlice.js';
 
 import './ConversationLeaf.css'
-import { getConversationMode, getReplyTargetPostId, getRootPostId, setReplyTargetPostId } from '../conversationSlice.js';
+import { getConversationMode, getMessageSearchMode, getReplyTargetPostId, getRootPostId, setReplyTargetPostId } from '../conversationSlice.js';
 
 const roundNumberToString = (number) => {
     let outputNumber = 0;
@@ -60,6 +60,7 @@ const ConversationLeaf = (props) => {
     const rootPostId = useSelector(getRootPostId);
 
     const conversationMode = useSelector(getConversationMode);
+    const messageSearchMode = useSelector(getMessageSearchMode);
 
     useEffect(() => {
         if (idMessageSearchThunkStatus == thunkStatuses.fulfilled) {
@@ -150,9 +151,11 @@ const ConversationLeaf = (props) => {
 
     const [rootElementClasses, setRootElementClasses] = useState("messageLeafMain");
 
-    useEffect(() => {        
-        setRootElementClasses(`messageLeafMain${isSelected ? ` selectedLeaf`: ` unselectedLeaf`}${props.highlightable ? ` highlightableLeaf`:``}`); 
-    }, [isSelected, props.highlightable]);
+    useEffect(() => {
+        let selectedClassName = messageSearchMode ? "selectedHighlightableLeaf" : "selectedLeaf";
+        let unselectedClassName = messageSearchMode ? "unselectedHighlightableLeaf" : "unslectedLeaf";      
+        setRootElementClasses(`messageLeafMain${isSelected ? ` ${selectedClassName}`: ` ${unselectedClassName}`}`); 
+    }, [isSelected, messageSearchMode]);
 
     //#endregion
 

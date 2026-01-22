@@ -1,4 +1,4 @@
-#root, #elementRoot{
+#root{
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -7,6 +7,17 @@
     color-scheme: light dark;
     overflow: hidden;
     color: light-dark(black, white);
+}
+
+#pageRoot {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    color-scheme: light dark;
+    overflow: hidden;
 }
 
 body {
@@ -108,10 +119,7 @@ button > a,  button > a:visited{
 }
 
 #topBar {
-    position: fixed;
     box-sizing: border-box;
-    top: 0;
-    left: 0;
     width: 100%;
     min-height: 5rem;
     background-color: light-dark(rgb(230,230,230), rgb(20, 20, 20));
@@ -126,18 +134,15 @@ button > a,  button > a:visited{
 */
 #bodyDiv {
     height: 100vh;
-    width: 100vw;
+    width: 100%;
     box-sizing: border-box;
-    padding: 6rem 1rem 8rem 1rem; 
+    padding: 1rem 1rem 1rem 1rem; 
     background-color: light-dark(rgb(200, 200, 200), rgb(50, 50, 50));  
     overflow: auto;  
 }
 
 #bottomBar {
-    position: fixed;
     box-sizing: border-box;
-    bottom: 0;
-    left: 0;
     width: 100%;
     min-height: fit-content;
     background-color: light-dark(white, rgb(18, 18, 18));

@@ -154,7 +154,7 @@ const Conversation = () => {
     //#endregion
 
     return (
-        <div onContextMenu={(e) => contextMenuBaseClick(e)} onClick={(e) => baseClick(e)}>
+        <div id="pageRoot" onContextMenu={(e) => contextMenuBaseClick(e)} onClick={(e) => baseClick(e)}>
             <title>Conversation</title>
             <LeafContextMenu
                 data={messagePostContextMenuData}
