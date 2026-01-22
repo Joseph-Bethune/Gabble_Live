@@ -2,8 +2,8 @@ import React from 'react'
 import { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { setStateFromSessionStorage } from '../../userAuth/userAuthSlice.js';
-import { thunkStatuses } from '../conversationSlice.js';
-import { findMessagesByIdThunk, getIdMessageSearchThunkStatus, resetIdSearchThunkStatus } from '../conversationSlice.js';
+import { thunkStatuses } from '../postDatabaseSlice.js';
+import { findMessagesByIdThunk, getIdMessageSearchThunkStatus, resetIdSearchThunkStatus } from '../postDatabaseSlice.js';
 import ConversationBranch from './ConversationBranch.jsx';
 import ConversationLeaf from '../conversationLeaf/ConversationLeaf.jsx';
 import SubBranches from '../subBranches/SubBranches.jsx';
@@ -12,10 +12,18 @@ import './ConversationBranch.css';
 
 const MessageBranch = (props) => {
 
+    //#region expected props
+    /*
+        postId
+        leftMargin
+        contextMenuDelegate
+        likeClickHandlerDelegate
+        dislikeClickHandlerDelegate
+    //*/
+    //#endregion
+    
     const dispatch = useDispatch();
     const divRef = useRef(null);
-
-    const [rootPostId, setRootPostId] = useState(props.postId);
 
     const [showReplies, setShowReplies] = useState(false);
 
@@ -27,28 +35,13 @@ const MessageBranch = (props) => {
             setLeftMargin(currentStyle.getPropertyValue('margin-left') + props.leftMargin);
         }
     }, []);
-
-    useEffect(() => {
-        if(!rootPostId) return;
-    }, [rootPostId]);
-
-    useEffect(() => {
-        if(props.postToReplyTo){
-            
-        }
-    }, [props.postToReplyTo]);
     
-    //#region subelement handlers
+    //#region subelement handlers and delegates
 
     const updatePostDelegate = (newPostData) => {
         setReplyMessageIds(newPostData.responses);
     }
-
-    const replyClickHandlerDelegate = (messagePostId) => {
-        if(props.replyClickHandlerDelegate){
-            props.replyClickHandlerDelegate(messagePostId);
-        }
-    }
+    
     const likeClickHandlerDelegate = (messagePostId) => {
         if(props.likeClickHandlerDelegate) props.likeClickHandlerDelegate(messagePostId)  
     }
@@ -75,9 +68,19 @@ const MessageBranch = (props) => {
 
     //#endregion
 
-    //#region reply message branches
+    //#region reply message ids
 
     const [replyMessageIds, setReplyMessageIds] = useState([]);
+
+    //#endregion
+
+    //#region post id 
+
+    const [postId, setPostId] = useState();
+
+    useEffect(() => {
+        setPostId(props.postId);
+    }, [props.postId])
 
     //#endregion
 
@@ -85,18 +88,14 @@ const MessageBranch = (props) => {
         marginLeft: `${leftMargin}px`
     };
 
-    // {showReplies && replyMessageIds && replyMessageIds.length > 0 ? [replyBranches] : <></>}
     return (
         <div className='branchMain' ref={divRef} style={style}>
             <ConversationLeaf
-                postId={rootPostId}
-                replyClickHandlerDelegate={replyClickHandlerDelegate}
+                postId={props.postId}
                 likeClickHandlerDelegate={likeClickHandlerDelegate}
                 dislikeClickHandlerDelegate={dislikeClickHandlerDelegate}
                 setMessageDataDelegate={setMessageDataDelegate}
-                updatePostDelegate={updatePostDelegate}
-                postToReplyTo={props.postToReplyTo}
-                rootPostId={props.rootPostId}
+                updatePostDelegate={updatePostDelegate}                
                 contextMenuDelegate={contextMenuDelegate}
             />
             <button className='replyExpansionButton' onClick={updateSetShowReplies}>
@@ -107,9 +106,6 @@ const MessageBranch = (props) => {
                     showReplies={showReplies}
                     replyMessageIds={replyMessageIds}
                     leftMargin={leftMargin+50}
-                    replyClickHandlerDelegate={props.replyClickHandlerDelegate}
-                    postToReplyTo={props.postToReplyTo}
-                    rootPostId={props.rootPostId}
                 />
             </div>
         </div>

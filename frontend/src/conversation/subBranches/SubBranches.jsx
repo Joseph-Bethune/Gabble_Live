@@ -5,15 +5,16 @@ import ConversationBranch from '../conversationBranch/ConversationBranch.jsx';
 import './SubBranches.css';
 
 const SubBranches = (props) => {
+
+
+    /* expected props
+        replyMessageIds
+        showReplies
+    //*/
+
     const dispatch = useDispatch();
 
-    //#region show replies
-
-    const [showReplies, setShowReplies] = useState(props.showReplies);
-
-    useEffect(() => {
-        setShowReplies(props.showReplies);
-    }, [props.showReplies]);
+    //#region delegates
 
     //#endregion
 
@@ -43,7 +44,7 @@ const SubBranches = (props) => {
     }
 
     useEffect(() => {        
-        if (showReplies && props.replyMessageIds != null) {
+        if (props.showReplies && props.replyMessageIds != null) {
             let update = false;
             if (replyMessageIds == null && props.replyMessageIds != null || replyMessageIds != null && props.replyMessageIds == null) {
                 update = true;
@@ -55,27 +56,23 @@ const SubBranches = (props) => {
                     update = true;
                 }
             }
+
             if (update) {
                 setReplyMessageIds(props.replyMessageIds);
+                updateReplyBranches(props.replyMessageIds);
             }
         }
 
-    }, [props.replyMessageIds, showReplies]);
+    }, [props.replyMessageIds, props.showReplies]);
 
-    useEffect(() => {
-        updateReplyBranches();
-    }, [replyMessageIds]);
-
-    const updateReplyBranches = () => {
-        if (replyMessageIds != null && replyMessageIds.length > 0) {
-            setReplyBranches(replyMessageIds.map((id) => {
-                return <ConversationBranch
-                    leftMargin={props.leftMargin}
+    const updateReplyBranches = (ids) => {
+        if (ids != null && ids.length > 0) {
+            setReplyBranches(ids.map((id) => {
+                return <ConversationBranch                    
                     key={id}
                     postId={id}
-                    replyClickHandlerDelegate={props.replyClickHandlerDelegate}
-                    postToReplyTo={props.postToReplyTo}
-                    rootPostId={props.rootPostId}
+                    leftMargin={props.leftMargin}
+                    replyClickHandlerDelegate={props.replyClickHandlerDelegate}                    
                 />
             }));
         }
@@ -84,8 +81,8 @@ const SubBranches = (props) => {
     //#endregion
 
     return (
-        <div>
-            {showReplies ? [replyBranches] : <></>}
+        <div style= {{display: props.showReplies ? 'block' : 'none'}}>
+            {replyBranches}
         </div>
     )
 }

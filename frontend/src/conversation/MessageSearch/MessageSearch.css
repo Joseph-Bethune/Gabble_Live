@@ -25,12 +25,3 @@
     justify-content: center;
     align-items: center;
 }
-
-.hidden {
-    display: none;
-}
-
-.toggleButton {
-    max-width: fit-content;
-    max-height: fit-content;
-}

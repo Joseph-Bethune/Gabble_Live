@@ -1,14 +1,31 @@
 import { useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux'
-import { thunkStatuses, 
-    registerNewUserThunk, getRegistrationThunkStatus, resetRegistrationThunkStatus, getRegistrationThunkStatusError } from '../userAuthSlice';
+import {
+    thunkStatuses,
+    registerNewUserThunk, getRegistrationThunkStatus, resetRegistrationThunkStatus, getRegistrationThunkStatusError
+} from '../userAuthSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import NavButton from '../../navButton/NavButton';
 import "../styles/userAuth.css";
 import "./Register.css";
 
-const USERNAME_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/;
-const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
+const PWD_REGEX = {
+    length: /^.{8,24}$/,
+    inclusiveTests: {
+        lowercaseLetter: /(?=.*[a-z])/,
+        uppercaseLetter: /(?=.*[A-Z])/,
+        number: /(?=.*[\d])/,
+        specialCharacter: /(?=.*[!@#$%])/
+    },
+    exclusiveTest: /[^a-zA-Z0-9!@#$%]/, // needs to be inverted
+    all: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/,
+}
+const USERNAME_REGEX = {
+    startsWithLetter: /^[a-zA-Z]/,
+    length: /^.{4,23}$/,
+    content: /^[a-zA-Z0-9-_]+$/,
+    all: /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/
+};
 
 const Register = () => {
 
@@ -18,11 +35,9 @@ const Register = () => {
     const navigate = useNavigate();
 
     const [username, setUsername] = useState('');
-    const [validName, setValidName] = useState(false);
     const [userFocus, setUserFocus] = useState(false);
 
     const [pwd, setPwd] = useState('');
-    const [validPwd, setValidPwd] = useState(false);
     const [pwdFocus, setPwdFocus] = useState(false);
 
     const [matchPwd, setMatchPwd] = useState('');
@@ -31,28 +46,104 @@ const Register = () => {
     const [confirmPwdErrMsg, setConfirmPwdErrMsg] = useState('Invalid Password');
 
     const [errMsg, setErrMsg] = useState('');
-    const [success, setSuccess] = useState(false);
 
     useEffect(() => {
-        //userRef.current.focus();
+        userRef.current.focus();
     }, []);
 
     useEffect(() => {
-        // checks if the user name passes the regex test
-        const result = USERNAME_REGEX.test(username);
-        setValidName(result);
-    }, [username]);
+        setErrMsg('');
+    }, [username, pwd, matchPwd]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const v1 = USERNAME_REGEX.all.test(username);
+        const v2 = PWD_REGEX.all.test(pwd);
+        const v3 = pwd === matchPwd;
+        if (!v1 || !v2 || !v3) {
+            setErrMsg("Invalid Entry");
+            return;
+        }
+        dispatch(registerNewUserThunk({ username: username, password: pwd, displayName: username }));
+    }
+
+    //#region username validity test
+
+    const [validName, setValidName] = useState({ length: false, startingCharacter: false, content: false, all: false });
 
     useEffect(() => {
-        // checks if the password passes the regex test
-        const validPwd = PWD_REGEX.test(pwd);
-        setValidPwd(validPwd);
+        // checks if the user name passes the regex tests      
+
+        const length = USERNAME_REGEX.length.test(username);
+        const startsWithLetter = USERNAME_REGEX.startsWithLetter.test(username);
+        const content = USERNAME_REGEX.content.test(username);        
+
+        const newValue = {
+            length: length,
+            startingCharacter: startsWithLetter,
+            content: content,
+            all: (length && startsWithLetter && content)
+        };
+
+        setValidName(newValue);
+    }, [username]);
+
+    //#endregion
+
+    //#region showpassword flags
+
+    const [showPwd, setShowPwd] = useState(false);
+    const [showPwdMatch, setShowPwdMatch] = useState(false);
+
+    //#endregion
+
+    //#region password validity test
+
+    const [validPwd, setValidPwd] = useState({
+        length: false,
+        inclusiveTests: {
+            lowercaseLetter: false,
+            uppercaseLetter: false,
+            number: false,
+            specialCharacter: false,
+            root: false
+        },
+        exclusiveTest: false,
+        all: false
+    });
+
+    useEffect(() => {
+
+        const length = PWD_REGEX.length.test(pwd);
+
+        const exclusiveTest = !PWD_REGEX.exclusiveTest.test(pwd);
+
+        const lowercaseLetter = PWD_REGEX.inclusiveTests.lowercaseLetter.test(pwd);
+        const uppercaseLetter = PWD_REGEX.inclusiveTests.uppercaseLetter.test(pwd);
+        const number = PWD_REGEX.inclusiveTests.number.test(pwd);
+        const specialCharacter = PWD_REGEX.inclusiveTests.specialCharacter.test(pwd);
+        const inclusiveTestRoot = (lowercaseLetter && uppercaseLetter && number && specialCharacter);
+
+        const newValue = {
+            length: length,
+            inclusiveTests: {
+                lowercaseLetter,
+                uppercaseLetter,
+                number,
+                specialCharacter,
+                root: inclusiveTestRoot
+            },
+            exclusiveTest: exclusiveTest,
+            all: (length && inclusiveTestRoot && exclusiveTest)
+        }
+
+        setValidPwd(newValue);
 
         // checks if the passwords match
         const pwdMatch = pwd === matchPwd;
         setValidMatch(pwdMatch);
 
-        if (validPwd && pwdMatch) {
+        if (validPwd.all && pwdMatch) {
             setConfirmPwdErrMsg('Good');
         }
         else if (!pwdMatch) {
@@ -63,21 +154,7 @@ const Register = () => {
         }
     }, [pwd, matchPwd]);
 
-    useEffect(() => {
-        setErrMsg('');
-    }, [username, pwd, matchPwd]);    
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const v1 = USERNAME_REGEX.test(username);
-        const v2 = PWD_REGEX.test(pwd);
-        const v3 = pwd === matchPwd;
-        if (!v1 || !v2 || !v3) {
-            setErrMsg("Invalid Entry");
-            return;
-        }
-        dispatch(registerNewUserThunk({ username: username, password: pwd, displayName: username }));
-    }
+    //#endregion
 
     //#region registration thunk status and error message
 
@@ -93,8 +170,8 @@ const Register = () => {
             setErrorClasses("hidden");
             setErrorText(null);
             navigate("/user/login", { state: { username: username } });
-        } else if (registrationThunkStatus == thunkStatuses.rejected){
-            if(registrationErrorMessage != null){
+        } else if (registrationThunkStatus == thunkStatuses.rejected) {
+            if (registrationErrorMessage != null) {
                 setErrorClasses("errorMessage");
                 setErrorText(registrationErrorMessage);
                 dispatch(resetRegistrationThunkStatus());
@@ -117,21 +194,20 @@ const Register = () => {
     return (
         <div>
             <div className="topBar">
-                <NavButton links={getLinks()} showLogin={true}/>
+                <NavButton links={getLinks()} showLogin={true} />
             </div>
             <div className='centerDiv rootDiv'>
                 <title>New User Registration</title>
                 <p ref={errRef} className={errMsg ? "errmsg" : "offscreen"} aria-live="assertive">{errMsg}</p>
                 <h1>Register</h1>
-                <div className={errorClasses} style={{marginBottom: '1rem'}}>
+                <div className={errorClasses} style={{ marginBottom: '1rem' }}>
                     {errorText}
                 </div>
                 <form className='verticalForm authForm regForm' onSubmit={handleSubmit}>
-                    <div>
+                    <div id="username" className='flex-column'>
                         <label htmlFor="username">Username :
-                            {validName ? (<span className="valid">Good</span>) : (<span className="invalid">Invalid Username</span>)}
+                            {validName.all ? (<span className="valid">Good</span>) : (<span className="invalid">Invalid Username</span>)}
                         </label>
-                        <br />
                         <input
                             type="text"
                             id="username"
@@ -144,56 +220,88 @@ const Register = () => {
                             onFocus={() => setUserFocus(true)}
                             onBlur={() => setUserFocus(false)}
                         />
-                        <p id="uidnote" className={userFocus && !validName ? "instructions" : "offscreen"}>
-                            4 to 24 characters. <br />
-                            Must begin with a letter.<br />
-                            Letters, numbers, underscores, hyphens allowed.
-                        </p>
+                        <div id="uidnote" className={userFocus && !validName.all ? "instructions" : "offscreen"}>
+                            <div className={validName.length ? 'valid' : 'invalid'}>
+                                4 to 24 characters.
+                            </div>
+                            <div className={validName.startingCharacter ? 'valid' : 'invalid'}>
+                                Must begin with a letter.
+                            </div>
+                            <div className={validName.content ? 'valid' : 'invalid'}>
+                                Letters, numbers, underscores, hyphens allowed.
+                            </div>
+                        </div>
                     </div>
-
-                    <div>
-                        <label htmlFor="password">Password :
-                            {validPwd ? <span className="valid">Good</span> : <span className="invalid">Invalid Password</span>}
-                        </label>
-                        <br />
-                        <input
-                            type="password"
-                            id="password"
-                            onChange={(e) => setPwd(e.target.value)}
-                            required
-                            aria-invalid={validPwd ? "false" : "true"}
-                            aria-describedby="pwdnote"
-                            onFocus={() => setPwdFocus(true)}
-                            onBlur={() => setPwdFocus(false)}
-                        />
-                        <p id="pwdnote" className={pwdFocus && !validPwd ? "instructions" : "offscreen"}>
-                            8 to 24 characters. <br />
-                            Must include uppercase and lowercase letters, a number and a special character.<br />
-                            Allowed special characters: ! @ # $ %.
-                        </p>
+                    <div id="password" className='flex-column'>
+                        <div className='flex-row'>
+                            <label htmlFor="password">Password :
+                                {validPwd.all ? <span className="valid">Good</span> : <span className="invalid">Invalid Password</span>}
+                            </label>
+                        </div>
+                        <div className='flex-row'>
+                            <input
+                                type={showPwd ? "text" : "password"}
+                                id="password"
+                                onChange={(e) => setPwd(e.target.value)}
+                                required
+                                aria-invalid={validPwd.all ? "false" : "true"}
+                                aria-describedby="pwdnote"
+                                onFocus={() => setPwdFocus(true)}
+                                onBlur={() => setPwdFocus(false)}
+                            />
+                            <input
+                                type="checkbox"
+                                className="checkBox"
+                                checked={showPwd}
+                                onChange={(e) => { setShowPwd(e.target.checked) }}
+                            /> : Show Password
+                        </div>
+                        <div id="pwdnote" className={pwdFocus && !validPwd.all ? "instructions" : "offscreen"}>
+                            <div>
+                                <span className={validPwd.inclusiveTests.root ? 'valid' : 'invalid'}>Must include at least one of each:</span>
+                                <br /><span className={validPwd.inclusiveTests.lowercaseLetter ? 'valid' : 'invalid'}>lowercase letter,</span>
+                                <br /><span className={validPwd.inclusiveTests.uppercaseLetter ? 'valid' : 'invalid'}>uppercase letter,</span>
+                                <br /><span className={validPwd.inclusiveTests.number ? 'valid' : 'invalid'}>number,</span>
+                                <br /><span className={validPwd.inclusiveTests.specialCharacter ? 'valid' : 'invalid'}>allowed special character (! @ # $ %).</span>
+                            </div>
+                            <div className={validPwd.exclusiveTest ? 'valid' : 'invalid'}>
+                                Cannot include any characters not listed above.
+                            </div>
+                            <div className={validPwd.length ? 'valid' : 'invalid'}>
+                                8 to 24 characters.
+                            </div>
+                        </div>
                     </div>
+                    <div id="passwordMatch" className='flex-column'>
+                        <div className='flex-row'>
+                            <label htmlFor="confirm_password">Password Confirmation :
+                                <span className={confirmPwdErrMsg === 'Good' ? "valid" : "invalid"}>{confirmPwdErrMsg}</span>
+                            </label>
+                        </div>
+                        <div className='flex-row'>
+                            <input
+                                type={showPwdMatch ? "text" : "password"}
+                                id="confirm_password"
+                                onChange={(e) => setMatchPwd(e.target.value)}
+                                required
+                                aria-invalid={validPwd.all ? "false" : "true"}
+                                aria-describedby="confirmnote"
+                                onFocus={() => setMatchFocus(true)}
+                                onBlur={() => setMatchFocus(false)}
+                            />
+                            <input
+                                type="checkbox"
+                                className="checkBox"
+                                checked={showPwdMatch}
+                                onChange={(e) => { setShowPwdMatch(e.target.checked) }}
+                            /> : Show Password
+                        </div>
 
-                    <div>
-                        <label htmlFor="confirm_password">Password Confirmation :
-                            <span className={confirmPwdErrMsg === 'Good' ? "valid" : "invalid"}>{confirmPwdErrMsg}</span>
-                        </label>
-                        <br />
-                        <input
-                            type="password"
-                            id="confirm_password"
-                            onChange={(e) => setMatchPwd(e.target.value)}
-                            required
-                            aria-invalid={validPwd ? "false" : "true"}
-                            aria-describedby="confirmnote"
-                            onFocus={() => setMatchFocus(true)}
-                            onBlur={() => setMatchFocus(false)}
-                        />
-                        <p id="confirmnote" className={matchFocus && !validMatch ? "instructions" : "offscreen"}>
-                            Must match the first password input field.
-                        </p>
+                        <div id="confirmnote" className={matchFocus && !validMatch ? "instructions" : "offscreen"}>
+                            <span className={validMatch ? 'valid' : 'invalid'}>Must match the first password input field.</span>
+                        </div>
                     </div>
-
-                    <button disabled={!validName || !validPwd || !validMatch ? true : false}>
+                    <button disabled={!validName || !validPwd.all || !validMatch ? true : false}>
                         Sign Up
                     </button>
                 </form>

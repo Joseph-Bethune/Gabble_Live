@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDom from 'react-dom';
 import { useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { resetChangeTagsThunkStatus, getChangeTagsThunkStatus, getChangeTagsThunkStatusError, changeTagsThunk, thunkStatuses } from '../conversationSlice.js';
+import { resetChangeTagsThunkStatus, getChangeTagsThunkStatus, getChangeTagsThunkStatusError, changeTagsThunk, thunkStatuses } from '../postDatabaseSlice.js';
 import '../../main/main.css';
 import './ChangeTagsModal.css';
 

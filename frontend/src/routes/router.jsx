@@ -3,7 +3,7 @@ import Register from '../userAuth/Register/Register.jsx'
 import Login from '../userAuth/Login/Login.jsx';
 import Logout from '../userAuth/Logout/Logout.jsx';
 import Profile from '../userAuth/Profile/Profile.jsx';
-import Conversation from '../conversation/Conversation.jsx';
+import Conversation from '../conversation/ConversationPage/Conversation.jsx';
 import MessageSearchPage from '../conversation/MessageSearch/MessageSearch.jsx';
 
 const router = createBrowserRouter([

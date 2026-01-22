@@ -2,6 +2,11 @@ form{
     display: inline;
 }
 
+#newMessageFormRoot{
+    display: flex;
+    flex-direction: row;
+}
+
 .formDiv{
     display: inline-flex;
     flex-direction: row;
@@ -11,7 +16,7 @@ form{
 }
 
 .replyToPostMode {
-    background-color: blue;
+    background-color: light-dark(yellow, blue);
 }
 
 table button{
@@ -20,4 +25,12 @@ table button{
 
 td {
     padding: .25rem;
+}
+
+.hidden {
+    display: none;
+}
+
+.toggleButton {
+    box-sizing: border-box;
 }

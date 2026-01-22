@@ -12,7 +12,7 @@
 
 .instructions{
     color:white;
-    font-size: 1rem;
+    font-size: 1.25rem;
 }
 
 .offscreen{
@@ -21,4 +21,10 @@
 
 .regForm {
     gap: 1rem
+}
+
+.checkBox {
+    width: 1.5rem;
+    height: 1.5rem;
+    accent-color: green;
 }

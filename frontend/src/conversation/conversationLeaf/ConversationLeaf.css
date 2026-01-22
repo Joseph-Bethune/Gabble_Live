@@ -77,7 +77,7 @@
 }
 
 .selectedLeaf {
-    background-color: rgb(0, 0, 210);
+    background-color: light-dark(rgb(210, 210, 0),rgb(0, 0, 210));
 }
 
 .unselectedLeaf {
@@ -85,5 +85,5 @@
 }
 
 .selectedLeaf:hover {
-    background-color: rgb(0,0,255);
+    background-color: light-dark(rgb(250, 250, 0),rgb(0, 0, 250));
 }

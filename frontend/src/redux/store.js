@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
-import conversationReducer from '../conversation/conversationSlice.js'
-import userAuthReducer from "../userAuth/userAuthSlice.js"
+import postDatabaseSlice from '../conversation/postDatabaseSlice.js'
+import userAuthSlice from "../userAuth/userAuthSlice.js"
+import conversationSlice from "../conversation/conversationSlice.js";
 
 export const store = configureStore({
     reducer: {
-        conversationSlice: conversationReducer,
-        userAuthSlice: userAuthReducer
+        postDatabaseSlice: postDatabaseSlice,
+        userAuthSlice: userAuthSlice,
+        conversationSlice: conversationSlice,
     }
 });

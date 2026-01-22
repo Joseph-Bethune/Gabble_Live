@@ -2,35 +2,22 @@ import React from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import NavButton from '../navButton/NavButton';
-import ConversationBranch from "./conversationBranch/ConversationBranch.jsx";
-import NewMessageForm from './newMessageForm/NewMessageForm.jsx';
-import { getDisplayName, isLoggedIn, setStateFromSessionStorage } from '../userAuth/userAuthSlice.js';
-import { getSendMessageThunkStatus, resetSendMessageThunkStatus, thunkStatuses } from './conversationSlice.js'
-import ChangeTagsModal from './ChangeTagsModal/ChangeTagsModal.jsx';
-import LeafContextMenu from './LeafContextMenu/LeafContextMenu.jsx';
+import NavButton from '../../navButton/NavButton.jsx';
+import ConversationBranch from "../conversationBranch/ConversationBranch.jsx";
+import NewMessageForm from '../newMessageForm/NewMessageForm.jsx';
+import { getDisplayName, isLoggedIn, setStateFromSessionStorage } from '../../userAuth/userAuthSlice.js';
+import { getSendMessageThunkStatus, resetSendMessageThunkStatus, thunkStatuses } from '../postDatabaseSlice.js'
+import ChangeTagsModal from '../ChangeTagsModal/ChangeTagsModal.jsx';
+import LeafContextMenu from '../LeafContextMenu/LeafContextMenu.jsx';
+import { getReplyTargetPostId, getRootPostId, setConversationMode, setReplyTargetPostId, setRootPostId } from '../conversationSlice.js';
 
 const Conversation = () => {
     const dispatch = useDispatch();
     const { postId: dynamicRoutePostId } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const [actualPostId, setActualPostId] = useState();
-
-    const [postToReplyTo, setPostToReplyTo] = useState(actualPostId);
     const isLoggedIn_redux = useSelector(isLoggedIn);
-
     const getSendMessageThunkStatus_redux = useSelector(getSendMessageThunkStatus);
-    const rootPost = useSelector((state) => state.conversationSlice.posts[actualPostId])
-
-    useEffect(() => {
-        dispatch(setStateFromSessionStorage());
-        if (dynamicRoutePostId) {
-            setActualPostId(dynamicRoutePostId);
-        } else if (searchParams.get('postId')) {
-            setActualPostId(searchParams.get('postId'));
-        }
-    }, []);
 
     useEffect(() => {
         if (getSendMessageThunkStatus_redux == thunkStatuses.fulfilled) {
@@ -38,22 +25,32 @@ const Conversation = () => {
         }
     }, [getSendMessageThunkStatus_redux]);
 
+    //#region root post
+
+    const rootPostId = useSelector(getRootPostId);
+    const rootPost = useSelector((state) => state.postDatabaseSlice.posts[rootPostId]);   
+
     useEffect(() => {
-        if (!postToReplyTo) setPostToReplyTo(postToReplyTo);
-    }, [actualPostId]);
+        dispatch(setStateFromSessionStorage());
+        let rootPostId = null;
+        if (dynamicRoutePostId) {
+            rootPostId = dynamicRoutePostId;
+        } else if (searchParams.get('postId')) {
+            rootPostId = searchParams.get('postId');
+        }
 
-    //#region handlers
-
-    const replyClickHandlerDelegate = (messagePostId) => {
-        const newPostToReplyTo = messagePostId == postToReplyTo ? actualPostId : messagePostId;
-        setPostToReplyTo(newPostToReplyTo);
-    }
-
-    const cancelReplyModeDelegate = () => {
-        setPostToReplyTo(actualPostId);
-    }
-
+        dispatch(setRootPostId({rootPostId: rootPostId}));
+        dispatch(setReplyTargetPostId({postId: rootPostId}));
+        dispatch(setConversationMode({newMode: true}));
+    }, []);
+    
     //#endregion
+
+    //#region post to reply to
+
+    const postToReplyTo = useSelector(getReplyTargetPostId);
+
+    //#endregion    
 
     //#region login data
 
@@ -174,20 +171,14 @@ const Conversation = () => {
             </div>
             <div id="bodyDiv">
                 <ConversationBranch
-                    postId={actualPostId}
-                    key={actualPostId}
-                    replyClickHandlerDelegate={replyClickHandlerDelegate}
-                    postToReplyTo={postToReplyTo}
-                    rootPostId={actualPostId}
+                    postId={rootPostId}
+                    key={rootPostId}
                     contextMenuDelegate={openMessagePostContextMenuDelegate}
                 />
             </div>
             <div id="bottomBar">
                 {isLoggedIn_redux ?
                     <NewMessageForm
-                        postToReplyTo={postToReplyTo}
-                        rootPostId={actualPostId}
-                        cancelReplyModeDelegate={cancelReplyModeDelegate}
                         conversationMode={true}
                     /> :
                     <></>
