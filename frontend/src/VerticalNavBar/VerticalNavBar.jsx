@@ -3,10 +3,9 @@ import { useRef, useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux'
 import { isLoggedIn, getUserName, getDisplayName } from '../userAuth/userAuthSlice';
+import './VerticalNavBar.css'
 
-import './NavButton.css'
-
-const NavButton = (props) => {
+const VerticalNavBar = (props) => {
 
     const navigate = useNavigate();
     const [showLinks, setShowLinks] = useState(false);
@@ -114,16 +113,16 @@ const NavButton = (props) => {
                     setShowLinks(!showLinks);
                 }}
             >
-                Show Links
+                {`>>`}
             </button>
         }
     }
 
     return (
-        <div className='linkList fixedRightCorner'>
+        <div class='navBarRoot'>
             {generateLinkButtons()}
         </div>
     )
 }
 
-export default NavButton
+export default VerticalNavBar

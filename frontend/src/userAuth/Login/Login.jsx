@@ -9,8 +9,8 @@ import {
     isLoggedIn, getUserAccessToken, getUserName,
 } from '../userAuthSlice.js';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import NavButton from '../../navButton/NavButton.jsx';
 import "../styles/userAuth.css";
+import VerticalNavBar from '../../VerticalNavBar/VerticalNavBar.jsx';
 
 const Login = (props) => {
 
@@ -171,53 +171,56 @@ const Login = (props) => {
 
     return (
         <div>
+            <title>User Login</title>
             <div className="topBar">
-                <NavButton links={getLinks()} showRegistration={true} />
+                
             </div>
-            <div className='centerDiv rootDiv'>
-                <title>User Login</title>
-                <h1>Login</h1>
-                <div className={errorClasses}>
-                    {errorText}
+            <div id='bodyContainer'>
+                <VerticalNavBar links={getLinks()} showRegistration={true} />
+                <div id='bodyDiv' className='centerDiv'>                    
+                    <h1>Login</h1>
+                    <div className={errorClasses}>
+                        {errorText}
+                    </div>
+                    <form className="verticalForm authForm" onSubmit={handleSubmit}>
+                        <label htmlFor="username">
+                            Username
+                        </label>
+                        <input
+                            type="text"
+                            id="username"
+                            ref={userRef}
+                            autoComplete="off"
+                            onChange={(e) => setUserName(e.target.value)}
+                            required
+                            onFocus={() => setUserNameFocus(true)}
+                            onBlur={() => setUserNameFocus(false)}
+                            value={userName}
+                        />
+
+                        <label htmlFor="password">
+                            Password
+                        </label>
+                        <input
+                            type="password"
+                            id="password"
+                            ref={passwordRef}
+                            onChange={(e) => setPwd(e.target.value)}
+                            required
+                            onFocus={() => setPwdFocus(true)}
+                            onBlur={() => setPwdFocus(false)}
+                            value={pwd}
+                        />
+
+                        <button disabled={!validName || !validPwd ? true : false} >
+                            Login
+                        </button>
+                    </form>
+                    <p>
+                        Not registered?<br />
+                        <Link to="/user/register">Sign Up</Link>
+                    </p>
                 </div>
-                <form className="verticalForm authForm" onSubmit={handleSubmit}>
-                    <label htmlFor="username">
-                        Username
-                    </label>
-                    <input
-                        type="text"
-                        id="username"
-                        ref={userRef}
-                        autoComplete="off"
-                        onChange={(e) => setUserName(e.target.value)}
-                        required
-                        onFocus={() => setUserNameFocus(true)}
-                        onBlur={() => setUserNameFocus(false)}
-                        value={userName}
-                    />
-
-                    <label htmlFor="password">
-                        Password
-                    </label>
-                    <input
-                        type="password"
-                        id="password"
-                        ref={passwordRef}
-                        onChange={(e) => setPwd(e.target.value)}
-                        required
-                        onFocus={() => setPwdFocus(true)}
-                        onBlur={() => setPwdFocus(false)}
-                        value={pwd}
-                    />
-
-                    <button disabled={!validName || !validPwd ? true : false} >
-                        Login
-                    </button>
-                </form>
-                <p>
-                    Not registered?<br />
-                    <Link to="/user/register">Sign Up</Link>
-                </p>
             </div>
         </div>
     );

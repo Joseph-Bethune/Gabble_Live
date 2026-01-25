@@ -7,10 +7,10 @@ import { rootMessageSearchThunk, getRootMessageSearchThunkStatus, resetRootSearc
 import { thunkStatuses } from '../postDatabaseSlice.js';
 import { getSendMessageThunkStatus, resetSendMessageThunkStatus } from '../postDatabaseSlice.js';
 import ConversationLeaf from '../conversationLeaf/ConversationLeaf.jsx';
-import NavButton from '../../navButton/NavButton.jsx';
 import NewMessageForm from '../newMessageForm/NewMessageForm.jsx';
 import ChangeTagsModal from '../ChangeTagsModal/ChangeTagsModal.jsx';
 import LeafContextMenu from '../LeafContextMenu/LeafContextMenu.jsx';
+import VerticalNavBar from '../../VerticalNavBar/VerticalNavBar.jsx';
 import './MessageSearch.css'
 import { getReplyTargetPostId, setConversationMode, setMessageSearchMode, setReplyTargetPostId, setRootPostId } from '../conversationSlice.js';
 
@@ -252,11 +252,13 @@ const MessageSearchPage = () => {
                         Search
                     </button>
                 </form>
-                <NavButton links={[]} showLogin={true} showRegistration={true} />
             </div>
-            <div id="bodyDiv" className="searchResults">
-                {displayPosts}
-            </div>
+            <div id='bodyContainer'>
+                <VerticalNavBar links={[]} showLogin={true} showRegistration={true}/>
+                <div id="bodyDiv" className="searchResults">
+                    {displayPosts}
+                </div>
+            </div>            
             <div id="bottomBar" style={{ display: 'flex', flexDirection: 'column' }}>
                 <NewMessageForm
                     cancelReplyModeDelegate={cancelReplyModeDelegate}

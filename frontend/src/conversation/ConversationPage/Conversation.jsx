@@ -2,7 +2,6 @@ import React from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import NavButton from '../../navButton/NavButton.jsx';
 import ConversationBranch from "../conversationBranch/ConversationBranch.jsx";
 import NewMessageForm from '../newMessageForm/NewMessageForm.jsx';
 import { getDisplayName, isLoggedIn, setStateFromSessionStorage } from '../../userAuth/userAuthSlice.js';
@@ -10,6 +9,7 @@ import { getSendMessageThunkStatus, resetSendMessageThunkStatus, thunkStatuses }
 import ChangeTagsModal from '../ChangeTagsModal/ChangeTagsModal.jsx';
 import LeafContextMenu from '../LeafContextMenu/LeafContextMenu.jsx';
 import { getReplyTargetPostId, getRootPostId, setConversationMode, setReplyTargetPostId, setRootPostId } from '../conversationSlice.js';
+import VerticalNavBar from '../../VerticalNavBar/VerticalNavBar.jsx';
 
 const Conversation = () => {
     const dispatch = useDispatch();
@@ -167,14 +167,17 @@ const Conversation = () => {
                 updateTags={submitChangeTagsDelegate}
             />
             <div id="topBar">
-                <NavButton links={getLinks()} showLogin={true} showRegistration={true} />
+                
             </div>
-            <div id="bodyDiv">
-                <ConversationBranch
-                    postId={rootPostId}
-                    key={rootPostId}
-                    contextMenuDelegate={openMessagePostContextMenuDelegate}
-                />
+            <div id='bodyContainer'>
+                <VerticalNavBar links={getLinks()} showLogin={true} showRegistration={true} /> 
+                <div id="bodyDiv">                
+                    <ConversationBranch
+                        postId={rootPostId}
+                        key={rootPostId}
+                        contextMenuDelegate={openMessagePostContextMenuDelegate}
+                    />
+                </div>
             </div>
             <div id="bottomBar">
                 {isLoggedIn_redux ?

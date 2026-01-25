@@ -5,9 +5,9 @@ import {
     registerNewUserThunk, getRegistrationThunkStatus, resetRegistrationThunkStatus, getRegistrationThunkStatusError
 } from '../userAuthSlice';
 import { Link, useNavigate } from 'react-router-dom';
-import NavButton from '../../navButton/NavButton';
 import "../styles/userAuth.css";
 import "./Register.css";
+import VerticalNavBar from '../../VerticalNavBar/VerticalNavBar';
 
 const PWD_REGEX = {
     length: /^.{8,24}$/,
@@ -76,7 +76,7 @@ const Register = () => {
 
         const length = USERNAME_REGEX.length.test(username);
         const startsWithLetter = USERNAME_REGEX.startsWithLetter.test(username);
-        const content = USERNAME_REGEX.content.test(username);        
+        const content = USERNAME_REGEX.content.test(username);
 
         const newValue = {
             length: length,
@@ -194,121 +194,124 @@ const Register = () => {
     return (
         <div>
             <div className="topBar">
-                <NavButton links={getLinks()} showLogin={true} />
-            </div>
-            <div className='centerDiv rootDiv'>
                 <title>New User Registration</title>
-                <p ref={errRef} className={errMsg ? "errmsg" : "offscreen"} aria-live="assertive">{errMsg}</p>
-                <h1>Register</h1>
-                <div className={errorClasses} style={{ marginBottom: '1rem' }}>
-                    {errorText}
-                </div>
-                <form className='verticalForm authForm regForm' onSubmit={handleSubmit}>
-                    <div id="username" className='flex-column'>
-                        <label htmlFor="username">Username :
-                            {validName.all ? (<span className="valid">Good</span>) : (<span className="invalid">Invalid Username</span>)}
-                        </label>
-                        <input
-                            type="text"
-                            id="username"
-                            ref={userRef}
-                            autoComplete="off"
-                            onChange={(e) => setUsername(e.target.value)}
-                            required
-                            aria-invalid={validName ? "false" : "true"}
-                            aria-describedby='uidnote'
-                            onFocus={() => setUserFocus(true)}
-                            onBlur={() => setUserFocus(false)}
-                        />
-                        <div id="uidnote" className={userFocus && !validName.all ? "instructions" : "offscreen"}>
-                            <div className={validName.length ? 'valid' : 'invalid'}>
-                                4 to 24 characters.
-                            </div>
-                            <div className={validName.startingCharacter ? 'valid' : 'invalid'}>
-                                Must begin with a letter.
-                            </div>
-                            <div className={validName.content ? 'valid' : 'invalid'}>
-                                Letters, numbers, underscores, hyphens allowed.
-                            </div>
-                        </div>
-                    </div>
-                    <div id="password" className='flex-column'>
-                        <div className='flex-row'>
-                            <label htmlFor="password">Password :
-                                {validPwd.all ? <span className="valid">Good</span> : <span className="invalid">Invalid Password</span>}
-                            </label>
-                        </div>
-                        <div className='flex-row'>
-                            <input
-                                type={showPwd ? "text" : "password"}
-                                id="password"
-                                onChange={(e) => setPwd(e.target.value)}
-                                required
-                                aria-invalid={validPwd.all ? "false" : "true"}
-                                aria-describedby="pwdnote"
-                                onFocus={() => setPwdFocus(true)}
-                                onBlur={() => setPwdFocus(false)}
-                            />
-                            <input
-                                type="checkbox"
-                                className="checkBox"
-                                checked={showPwd}
-                                onChange={(e) => { setShowPwd(e.target.checked) }}
-                            /> : Show Password
-                        </div>
-                        <div id="pwdnote" className={pwdFocus && !validPwd.all ? "instructions" : "offscreen"}>
-                            <div>
-                                <span className={validPwd.inclusiveTests.root ? 'valid' : 'invalid'}>Must include at least one of each:</span>
-                                <br /><span className={validPwd.inclusiveTests.lowercaseLetter ? 'valid' : 'invalid'}>lowercase letter,</span>
-                                <br /><span className={validPwd.inclusiveTests.uppercaseLetter ? 'valid' : 'invalid'}>uppercase letter,</span>
-                                <br /><span className={validPwd.inclusiveTests.number ? 'valid' : 'invalid'}>number,</span>
-                                <br /><span className={validPwd.inclusiveTests.specialCharacter ? 'valid' : 'invalid'}>allowed special character (! @ # $ %).</span>
-                            </div>
-                            <div className={validPwd.exclusiveTest ? 'valid' : 'invalid'}>
-                                Cannot include any characters not listed above.
-                            </div>
-                            <div className={validPwd.length ? 'valid' : 'invalid'}>
-                                8 to 24 characters.
-                            </div>
-                        </div>
-                    </div>
-                    <div id="passwordMatch" className='flex-column'>
-                        <div className='flex-row'>
-                            <label htmlFor="confirm_password">Password Confirmation :
-                                <span className={confirmPwdErrMsg === 'Good' ? "valid" : "invalid"}>{confirmPwdErrMsg}</span>
-                            </label>
-                        </div>
-                        <div className='flex-row'>
-                            <input
-                                type={showPwdMatch ? "text" : "password"}
-                                id="confirm_password"
-                                onChange={(e) => setMatchPwd(e.target.value)}
-                                required
-                                aria-invalid={validPwd.all ? "false" : "true"}
-                                aria-describedby="confirmnote"
-                                onFocus={() => setMatchFocus(true)}
-                                onBlur={() => setMatchFocus(false)}
-                            />
-                            <input
-                                type="checkbox"
-                                className="checkBox"
-                                checked={showPwdMatch}
-                                onChange={(e) => { setShowPwdMatch(e.target.checked) }}
-                            /> : Show Password
-                        </div>
+            </div>
+            <div id='bodyContainer'>
+                <VerticalNavBar links={getLinks()} showLogin={true} />
+                <div id='bodyDiv' className='centerDiv rootDiv'>
 
-                        <div id="confirmnote" className={matchFocus && !validMatch ? "instructions" : "offscreen"}>
-                            <span className={validMatch ? 'valid' : 'invalid'}>Must match the first password input field.</span>
-                        </div>
+                    <p ref={errRef} className={errMsg ? "errmsg" : "offscreen"} aria-live="assertive">{errMsg}</p>
+                    <h1>Register</h1>
+                    <div className={errorClasses} style={{ marginBottom: '1rem' }}>
+                        {errorText}
                     </div>
-                    <button disabled={!validName || !validPwd.all || !validMatch ? true : false}>
-                        Sign Up
-                    </button>
-                </form>
-                <p>
-                    Already registered?<br />
-                    <Link to="/user/login">Sign In</Link>
-                </p>
+                    <form className='verticalForm authForm regForm' onSubmit={handleSubmit}>
+                        <div id="username" className='flex-column'>
+                            <label htmlFor="username">Username :
+                                {validName.all ? (<span className="valid">Good</span>) : (<span className="invalid">Invalid Username</span>)}
+                            </label>
+                            <input
+                                type="text"
+                                id="username"
+                                ref={userRef}
+                                autoComplete="off"
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
+                                aria-invalid={validName ? "false" : "true"}
+                                aria-describedby='uidnote'
+                                onFocus={() => setUserFocus(true)}
+                                onBlur={() => setUserFocus(false)}
+                            />
+                            <div id="uidnote" className={userFocus && !validName.all ? "instructions" : "offscreen"}>
+                                <div className={validName.length ? 'valid' : 'invalid'}>
+                                    4 to 24 characters.
+                                </div>
+                                <div className={validName.startingCharacter ? 'valid' : 'invalid'}>
+                                    Must begin with a letter.
+                                </div>
+                                <div className={validName.content ? 'valid' : 'invalid'}>
+                                    Letters, numbers, underscores, hyphens allowed.
+                                </div>
+                            </div>
+                        </div>
+                        <div id="password" className='flex-column'>
+                            <div className='flex-row'>
+                                <label htmlFor="password">Password :
+                                    {validPwd.all ? <span className="valid">Good</span> : <span className="invalid">Invalid Password</span>}
+                                </label>
+                            </div>
+                            <div className='flex-row'>
+                                <input
+                                    type={showPwd ? "text" : "password"}
+                                    id="password"
+                                    onChange={(e) => setPwd(e.target.value)}
+                                    required
+                                    aria-invalid={validPwd.all ? "false" : "true"}
+                                    aria-describedby="pwdnote"
+                                    onFocus={() => setPwdFocus(true)}
+                                    onBlur={() => setPwdFocus(false)}
+                                />
+                                <input
+                                    type="checkbox"
+                                    className="checkBox"
+                                    checked={showPwd}
+                                    onChange={(e) => { setShowPwd(e.target.checked) }}
+                                /> : Show Password
+                            </div>
+                            <div id="pwdnote" className={pwdFocus && !validPwd.all ? "instructions" : "offscreen"}>
+                                <div>
+                                    <span className={validPwd.inclusiveTests.root ? 'valid' : 'invalid'}>Must include at least one of each:</span>
+                                    <br /><span className={validPwd.inclusiveTests.lowercaseLetter ? 'valid' : 'invalid'}>lowercase letter,</span>
+                                    <br /><span className={validPwd.inclusiveTests.uppercaseLetter ? 'valid' : 'invalid'}>uppercase letter,</span>
+                                    <br /><span className={validPwd.inclusiveTests.number ? 'valid' : 'invalid'}>number,</span>
+                                    <br /><span className={validPwd.inclusiveTests.specialCharacter ? 'valid' : 'invalid'}>allowed special character (! @ # $ %).</span>
+                                </div>
+                                <div className={validPwd.exclusiveTest ? 'valid' : 'invalid'}>
+                                    Cannot include any characters not listed above.
+                                </div>
+                                <div className={validPwd.length ? 'valid' : 'invalid'}>
+                                    8 to 24 characters.
+                                </div>
+                            </div>
+                        </div>
+                        <div id="passwordMatch" className='flex-column'>
+                            <div className='flex-row'>
+                                <label htmlFor="confirm_password">Password Confirmation :
+                                    <span className={confirmPwdErrMsg === 'Good' ? "valid" : "invalid"}>{confirmPwdErrMsg}</span>
+                                </label>
+                            </div>
+                            <div className='flex-row'>
+                                <input
+                                    type={showPwdMatch ? "text" : "password"}
+                                    id="confirm_password"
+                                    onChange={(e) => setMatchPwd(e.target.value)}
+                                    required
+                                    aria-invalid={validPwd.all ? "false" : "true"}
+                                    aria-describedby="confirmnote"
+                                    onFocus={() => setMatchFocus(true)}
+                                    onBlur={() => setMatchFocus(false)}
+                                />
+                                <input
+                                    type="checkbox"
+                                    className="checkBox"
+                                    checked={showPwdMatch}
+                                    onChange={(e) => { setShowPwdMatch(e.target.checked) }}
+                                /> : Show Password
+                            </div>
+
+                            <div id="confirmnote" className={matchFocus && !validMatch ? "instructions" : "offscreen"}>
+                                <span className={validMatch ? 'valid' : 'invalid'}>Must match the first password input field.</span>
+                            </div>
+                        </div>
+                        <button disabled={!validName || !validPwd.all || !validMatch ? true : false}>
+                            Sign Up
+                        </button>
+                    </form>
+                    <p>
+                        Already registered?<br />
+                        <Link to="/user/login">Sign In</Link>
+                    </p>
+                </div>
             </div>
         </div>
     )

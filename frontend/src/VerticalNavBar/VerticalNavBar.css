@@ -1,0 +1,28 @@
+.rotatedButton {
+    width: fit-content;
+    height: fit-content;
+    margin: .1rem;
+}
+
+.navBarRoot {
+    display: flex; 
+    flex-direction: column;
+    border-width: 1px;
+    border-style: solid;
+    border-color: light-dark(black, white);
+    background-color: light-dark(white, rgb(50, 50, 50));
+    gap: .5rem;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.navBarRoot > button {
+    margin: .5rem;
+}
+
+.navBarRoot > hr {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}

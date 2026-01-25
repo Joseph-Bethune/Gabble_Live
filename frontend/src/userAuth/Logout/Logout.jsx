@@ -3,8 +3,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { logoutUserThunk, getLogoutThunkStatus, thunkStatuses, resetLogoutThunkStatus } from '../userAuthSlice.js'
 import { getLoginDataFromSS } from '../userAuthSlice.js'
 import { useNavigate } from 'react-router-dom';
-import NavButton from '../../navButton/NavButton.jsx';
 import "../styles/userAuth.css";
+import VerticalNavBar from '../../VerticalNavBar/VerticalNavBar.jsx';
 
 const Logout = () => {
     const dispatch = useDispatch();
@@ -65,19 +65,22 @@ const Logout = () => {
 
     return (
         <div>
+            <title>User Logout</title>
             <div className="topBar">
-                <NavButton links={getLinks()} showLogout={false} />
+
             </div>
-            <div className='centerDiv rootDiv'>
-                <title>User Logout</title>
-                <h2>{username}</h2>
-                <h2>Do you want to logout?</h2>
-                <button onClick={handleLogout}>
-                    Logout
-                </button>
+            <div id='bodyContainer'>
+                <VerticalNavBar links={getLinks()} showLogout={false} />
+                <div id='bodyDiv' className='centerDiv'>
+
+                    <h2>{username}</h2>
+                    <h2>Do you want to logout?</h2>
+                    <button onClick={handleLogout}>
+                        Logout
+                    </button>
+                </div>
             </div>
         </div>
-
     )
 }
 
