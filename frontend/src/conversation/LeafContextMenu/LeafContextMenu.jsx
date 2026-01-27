@@ -16,11 +16,13 @@ const LeafContextMenu = (props) => {
     //*/
     //#endregion
 
-    useEffect(() => {
-        if (props.data.isOpen) {
+    //#region useEffect for post data
 
-        }
-    }, [props.data.isOpen])
+    useEffect(() => {
+        //console.log(props.data);
+    }, [props.data])
+
+    //#endregion
 
     //#region style
 
@@ -55,7 +57,7 @@ const LeafContextMenu = (props) => {
     //#region generate buttons
 
     const generateButtons = () => {
-        if (props.data.ownPost) {
+        if (props.data.isOwnPost) {
             return (
                 <div
                     className="clickableElement"

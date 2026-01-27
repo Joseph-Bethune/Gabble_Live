@@ -44,14 +44,25 @@
 .reactionCounters{
     margin: 0 5px 0 5px;
     border-radius: 10px;
-    background-color: light-dark(black,rgb(240, 240, 240));
-    color: light-dark(white,black);
     min-width: fit-content;
 }
 
 #reactionCounters:hover{
     cursor: pointer;
-    background-color: light-dark(black,rgb(220, 220, 220));
+}
+
+.liked{
+    background-color: green;
+    color: white;
+}
+
+.disliked {
+    background-color: red;
+    color: white;
+}
+
+.neutral {
+    background-color: light-dark(black,rgb(240, 240, 240));
 }
 
 #messageExpansionButton{

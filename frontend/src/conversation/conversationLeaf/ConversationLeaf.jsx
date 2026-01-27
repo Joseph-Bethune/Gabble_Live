@@ -9,7 +9,7 @@ import { resetLeafUpdateStatus } from '../postDatabaseSlice.js';
 import { getDisplayName, isLoggedIn } from '../../userAuth/userAuthSlice.js';
 
 import './ConversationLeaf.css'
-import { getConversationMode, getMessageSearchMode, getReplyTargetPostId, getRootPostId, setReplyTargetPostId } from '../conversationSlice.js';
+import { getConversationMode, getMessageSearchMode, getReplyTargetPostId, getRootPostId, setReplyTargetPostId, openMessagePostContextMenu } from '../conversationSlice.js';
 
 const roundNumberToString = (number) => {
     let outputNumber = 0;
@@ -34,7 +34,6 @@ const ConversationLeaf = (props) => {
     //#region expected props
     /*
         postId
-        contextMenuDelegate(event, messagePost)
         setMessageDataDelegate
         updatePostDelegate
         likeClickHandlerDelegate
@@ -54,7 +53,7 @@ const ConversationLeaf = (props) => {
     const idMessageSearchThunkStatus = useSelector(getIdMessageSearchThunkStatus);    
 
     const isLoggedIn_redux = useSelector(isLoggedIn);
-    const displayName_redux = useSelector(getDisplayName);  
+    const userDisplayName_redux = useSelector(getDisplayName);  
     
     const replyTargetId = useSelector(getReplyTargetPostId);
     const rootPostId = useSelector(getRootPostId);
@@ -66,7 +65,8 @@ const ConversationLeaf = (props) => {
         if (idMessageSearchThunkStatus == thunkStatuses.fulfilled) {
             dispatch(resetIdSearchThunkStatus());
             if (leafPost) {
-                setPosterName(`${leafPost.poster}${leafPost.poster == displayName_redux ? " (You)" : ""}`);
+                const localPosterName = leafPost.poster.displayName;
+                setPosterName(`${localPosterName}${localPosterName == userDisplayName_redux ? " (You)" : ""}`);
                 setRawMessageText(leafPost.message);
                 updateLikeStatuses(leafPost);
                 updateTagDisplay(leafPost);
@@ -219,17 +219,11 @@ const ConversationLeaf = (props) => {
 
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
+    const [likeButtonClasses, setLikeButtonClasses] = useState("reactionCounters");
 
     const [disliked, setDisliked] = useState(false);
     const [dislikeCount, setDislikeCount] = useState(0);
-
-    const getLikeStatusDisplay = () => {
-        return isLoggedIn_redux ? liked ? "Y" : "N" : "";
-    }
-
-    const getDislikeStatusDisplay = () => {
-        return isLoggedIn_redux ? disliked ? "Y" : "N" : "";
-    }
+    const [dislikeButtonClasses, setDislikeButtonClasses] = useState("reactionCounters");
 
     useEffect(() => {
         if (changeLikeStatusThunkStatus == thunkStatuses.fulfilled) {
@@ -242,17 +236,27 @@ const ConversationLeaf = (props) => {
         setLikeCount(leafData.likes);
         setDisliked(leafData.disliked);
         setDislikeCount(leafData.dislikes);
+        setLikeButtonClasses(`reactionCounters${isLoggedIn_redux && leafData.liked ? " liked" : ""}`);
+        setDislikeButtonClasses(`reactionCounters${isLoggedIn_redux && leafData.disliked ? " disliked" : ""}`);
     }
 
     //#endregion
 
     //#region right click context
 
+    const generateContextMenuRequestObject = (e, post) => {
+        return {    
+            positionX: e.clientX,
+            positionY: e.clientY,
+            targetPost: post,
+            isOwnPost: (userDisplayName_redux == leafPost.poster.displayName)
+        }
+    }
+
     const handleOnContextMenu = (e) => {
         e.stopPropagation();
-        if (props.contextMenuDelegate) {
-            props.contextMenuDelegate(e, leafPost);
-        }
+        e.preventDefault();
+        dispatch(openMessagePostContextMenu(generateContextMenuRequestObject(e, leafPost)));
     }
 
     //#endregion
@@ -278,11 +282,11 @@ const ConversationLeaf = (props) => {
                         <button onClick={handleReplyClick} className='reactionCounters'>{isSelected ? "Cancel Reply" : "Reply"}</button> :
                         <></>
                     }
-                    <button onClick={handleLikeClick} className='reactionCounters'>
-                        {getLikeStatusDisplay()} Likes: {roundNumberToString(likeCount)}
+                    <button onClick={handleLikeClick} className={likeButtonClasses}>
+                        Likes: {roundNumberToString(likeCount)}
                     </button>
-                    <button onClick={handleDislikeClick} className='reactionCounters'>
-                        {getDislikeStatusDisplay()} Dislikes: {roundNumberToString(dislikeCount)}
+                    <button onClick={handleDislikeClick} className={dislikeButtonClasses}>
+                        Dislikes: {roundNumberToString(dislikeCount)}
                     </button>
                 </span>
             </div>

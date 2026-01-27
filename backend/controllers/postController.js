@@ -24,7 +24,7 @@ const generatePostOutputObject = async (postObject, user) => {
         id: `${postObject._id}`,
         message: postObject.message,
         tags: postObject.tags,
-        poster: postersName,
+        poster: {displayName: postersName, id: poster._id},
         likes: postObject.likes.length,
         dislikes: postObject.dislikes.length,
         liked: (user ? postObject.likes.includes(user._id) : false),

@@ -12,7 +12,7 @@ import ChangeTagsModal from '../ChangeTagsModal/ChangeTagsModal.jsx';
 import LeafContextMenu from '../LeafContextMenu/LeafContextMenu.jsx';
 import VerticalNavBar from '../../VerticalNavBar/VerticalNavBar.jsx';
 import './MessageSearch.css'
-import { getReplyTargetPostId, setConversationMode, setMessageSearchMode, setReplyTargetPostId, setRootPostId } from '../conversationSlice.js';
+import { getReplyTargetPostId, setConversationMode, setMessageSearchMode, setReplyTargetPostId, setRootPostId, getMessagePostContextMenuData, closeMessagePostContextMenu } from '../conversationSlice.js';
 
 const MessageSearchPage = () => {
     const dispatch = useDispatch();
@@ -40,7 +40,7 @@ const MessageSearchPage = () => {
         dispatch(setStateFromSessionStorage());
         dispatch(setMessageSearchMode({ newMode: true }));
         dispatch(setReplyTargetPostId({ postId: null }));
-        dispatch(setRootPostId({ rootPostId: null }));        
+        dispatch(setRootPostId({ rootPostId: null }));
     }, []);
 
     useEffect(() => {
@@ -75,7 +75,7 @@ const MessageSearchPage = () => {
     }
 
     const executeSearch = () => {
-        if(searchText && searchText.length > 0){
+        if (searchText && searchText.length > 0) {
             const searchObject = parseSearchString(searchText);
             dispatch(rootMessageSearchThunk(searchObject));
         }
@@ -105,7 +105,6 @@ const MessageSearchPage = () => {
                     highlightable={true}
                     leafBodyClickHandlerDelegate={() => handleLeafBodyClick(element.id)}
                     replyClickHandlerDelegate={replyClickHandlerDelegate}
-                    contextMenuDelegate={openMessagePostContextMenuDelegate}
                 />
             });
         }
@@ -139,49 +138,33 @@ const MessageSearchPage = () => {
 
     //#endregion
 
-    //#region context menu handler  
-
-    const ownPost = (post) => {
-        if (post) {
-            if (isLoggedIn_redux && getDisplayName_redux == post.poster) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    const closeMessagePostContextMenuDelegate = () => {
-        setMessagePostcontextMenuData({ ...messagePostContextMenuData, isOpen: false, targetPost: null });
-    }
-
-    const openMessagePostContextMenuDelegate = (e, post) => {
-        e.preventDefault();
-        openContextMenuForMessagePost(e, post);
-    }
-
-    const openChangeTagsMenuDelegate = (targetPost) => {
-        setChangeTagsModalIsOpenDelegate(true, targetPost);
-    }
+    //#region message post context menu handler
 
     const defaultMessgePostContextMenuData = {
         isOpen: false,
         positionX: 0,
         positionY: 0,
         targetPost: null,
-        ownPost: false,
+        isOwnPost: false,
     }
 
+    const messagePostContextMenuData_redux = useSelector(getMessagePostContextMenuData);
     const [messagePostContextMenuData, setMessagePostcontextMenuData] = useState(defaultMessgePostContextMenuData);
 
-    const openContextMenuForMessagePost = (e, post) => {
-        setMessagePostcontextMenuData({
-            ...messagePostContextMenuData,
-            isOpen: true,
-            positionX: e.clientX,
-            positionY: e.clientY,
-            targetPost: post,
-            ownPost: ownPost(post)
-        });
+    useEffect(() => {
+        setMessagePostcontextMenuData(messagePostContextMenuData_redux);
+    }, [messagePostContextMenuData_redux]);
+
+    useEffect(() => {
+        closeMessagePostContextMenuDelegate();
+    }, []);
+
+    const closeMessagePostContextMenuDelegate = () => {
+        dispatch(closeMessagePostContextMenu());
+    }
+
+    const openChangeTagsMenuDelegate = (targetPost) => {
+        setChangeTagsModalIsOpenDelegate(true, targetPost);
     }
 
     const contextMenuBaseClick = (e) => {
@@ -254,11 +237,11 @@ const MessageSearchPage = () => {
                 </form>
             </div>
             <div id='bodyContainer'>
-                <VerticalNavBar links={[]} showLogin={true} showRegistration={true}/>
+                <VerticalNavBar links={[]} showLogin={true} showRegistration={true} />
                 <div id="bodyDiv" className="searchResults">
                     {displayPosts}
                 </div>
-            </div>            
+            </div>
             <div id="bottomBar" style={{ display: 'flex', flexDirection: 'column' }}>
                 <NewMessageForm
                     cancelReplyModeDelegate={cancelReplyModeDelegate}

@@ -2,11 +2,20 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const sliceName = "conversationSlice";
 
+const messagePostContextMenuDataDefault = {       
+    positionX: 0,
+    positionY: 0,
+    targetPost: null,
+    isOpen: false,
+    isOwnPost: false,       
+}
+
 const initialState = {
     replyTargetPostId: null,
     rootPostId: null, 
     conversationMode: false,
-    messageSearchMode: false,   
+    messageSearchMode: false, 
+    messagePostContextMenuData: messagePostContextMenuDataDefault  
 }
 
 const conversationSlice = createSlice({
@@ -35,6 +44,13 @@ const conversationSlice = createSlice({
             }
             state.messageSearchMode = newMode;
         },
+        openMessagePostContextMenu: (state, action) => {
+            const newValue = {...action.payload, isOpen: true};
+            state.messagePostContextMenuData = newValue;
+        },
+        closeMessagePostContextMenu: (state, _) => {
+            state.messagePostContextMenuData = messagePostContextMenuDataDefault;
+        }
     },
 });
 
@@ -42,9 +58,10 @@ export const getReplyTargetPostId = (state) => state.conversationSlice.replyTarg
 export const getRootPostId = (state) => state.conversationSlice.rootPostId;
 export const getConversationMode = (state) => state.conversationSlice.conversationMode;
 export const getMessageSearchMode = (state) => state.conversationSlice.messageSearchMode;
+export const getMessagePostContextMenuData = (state) => state.conversationSlice.messagePostContextMenuData;
 
 export const {
-    setReplyTargetPostId, setRootPostId, setConversationMode, setMessageSearchMode    
+    setReplyTargetPostId, setRootPostId, setConversationMode, setMessageSearchMode, openMessagePostContextMenu, closeMessagePostContextMenu    
 } = conversationSlice.actions;
 
 export default conversationSlice.reducer;

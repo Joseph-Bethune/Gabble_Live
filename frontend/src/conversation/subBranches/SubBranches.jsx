@@ -14,10 +14,6 @@ const SubBranches = (props) => {
 
     const dispatch = useDispatch();
 
-    //#region delegates
-
-    //#endregion
-
     //#region replies
 
     const [replyMessageIds, setReplyMessageIds] = useState(props.replyMessageIds);
@@ -72,7 +68,7 @@ const SubBranches = (props) => {
                     key={id}
                     postId={id}
                     leftMargin={props.leftMargin}
-                    replyClickHandlerDelegate={props.replyClickHandlerDelegate}                    
+                    replyClickHandlerDelegate={props.replyClickHandlerDelegate}
                 />
             }));
         }
@@ -81,7 +77,7 @@ const SubBranches = (props) => {
     //#endregion
 
     return (
-        <div style= {{display: props.showReplies ? 'block' : 'none'}}>
+        <div id='SubBranchesRoot' style= {{display: props.showReplies ? 'block' : 'none'}}>
             {replyBranches}
         </div>
     )

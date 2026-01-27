@@ -8,7 +8,7 @@ import { getDisplayName, isLoggedIn, setStateFromSessionStorage } from '../../us
 import { getSendMessageThunkStatus, resetSendMessageThunkStatus, thunkStatuses } from '../postDatabaseSlice.js'
 import ChangeTagsModal from '../ChangeTagsModal/ChangeTagsModal.jsx';
 import LeafContextMenu from '../LeafContextMenu/LeafContextMenu.jsx';
-import { getReplyTargetPostId, getRootPostId, setConversationMode, setReplyTargetPostId, setRootPostId } from '../conversationSlice.js';
+import { closeMessagePostContextMenu, getMessagePostContextMenuData, getReplyTargetPostId, getRootPostId, setConversationMode, setReplyTargetPostId, setRootPostId } from '../conversationSlice.js';
 import VerticalNavBar from '../../VerticalNavBar/VerticalNavBar.jsx';
 
 const Conversation = () => {
@@ -46,61 +46,39 @@ const Conversation = () => {
     
     //#endregion
 
-    //#region post to reply to
-
-    const postToReplyTo = useSelector(getReplyTargetPostId);
-
-    //#endregion    
-
     //#region login data
 
     const getDisplayName_redux = useSelector(getDisplayName);
 
     //#endregion
 
-    //#region context menu handler  
-
-    const ownPost = (post) => {
-        if (post) {
-            if (isLoggedIn_redux && getDisplayName_redux == post.poster) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    const closeMessagePostContextMenuDelegate = () => {
-        setMessagePostcontextMenuData({ ...messagePostContextMenuData, isOpen: false, targetPost: null });
-    }
-
-    const openMessagePostContextMenuDelegate = (e, post) => {
-        e.preventDefault();
-        openContextMenuForMessagePost(e, post);
-    }
-
-    const openChangeTagsMenuDelegate = (targetPost) => {
-        setChangeTagsModalIsOpenDelegate(true, targetPost);
-    }
+    //#region message post context menu handler  
 
     const defaultMessgePostContextMenuData = {
         isOpen: false,
         positionX: 0,
         positionY: 0,
         targetPost: null,
-        ownPost: false,
+        isOwnPost: false,
     }
 
+    const messagePostContextMenuData_redux = useSelector(getMessagePostContextMenuData);
     const [messagePostContextMenuData, setMessagePostcontextMenuData] = useState(defaultMessgePostContextMenuData);
 
-    const openContextMenuForMessagePost = (e, post) => {
-        setMessagePostcontextMenuData({
-            ...messagePostContextMenuData,
-            isOpen: true,
-            positionX: e.clientX,
-            positionY: e.clientY,
-            targetPost: post,
-            ownPost: ownPost(post)
-        });
+    useEffect(() => {
+        setMessagePostcontextMenuData(messagePostContextMenuData_redux);
+    }, [messagePostContextMenuData_redux]);
+
+    useEffect(() => {
+        closeMessagePostContextMenuDelegate();
+    }, []);
+
+    const closeMessagePostContextMenuDelegate = () => {
+        dispatch(closeMessagePostContextMenu());
+    }
+
+    const openChangeTagsMenuDelegate = (targetPost) => {
+        setChangeTagsModalIsOpenDelegate(true, targetPost);
     }
 
     const contextMenuBaseClick = (e) => {
@@ -175,7 +153,6 @@ const Conversation = () => {
                     <ConversationBranch
                         postId={rootPostId}
                         key={rootPostId}
-                        contextMenuDelegate={openMessagePostContextMenuDelegate}
                     />
                 </div>
             </div>

@@ -1,9 +1,3 @@
-.rotatedButton {
-    width: fit-content;
-    height: fit-content;
-    margin: .1rem;
-}
-
 .navBarRoot {
     display: flex; 
     flex-direction: column;

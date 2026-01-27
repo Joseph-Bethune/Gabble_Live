@@ -119,7 +119,7 @@ const VerticalNavBar = (props) => {
     }
 
     return (
-        <div class='navBarRoot'>
+        <div className='navBarRoot'>
             {generateLinkButtons()}
         </div>
     )

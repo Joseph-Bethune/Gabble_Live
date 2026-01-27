@@ -16,7 +16,6 @@ const MessageBranch = (props) => {
     /*
         postId
         leftMargin
-        contextMenuDelegate
         likeClickHandlerDelegate
         dislikeClickHandlerDelegate
     //*/
@@ -60,14 +59,6 @@ const MessageBranch = (props) => {
 
     //#endregion
 
-    //#region context menu delegate
-
-    const contextMenuDelegate = (e, post) => {
-        if(props.contextMenuDelegate) props.contextMenuDelegate(e, post);
-    }
-
-    //#endregion
-
     //#region reply message ids
 
     const [replyMessageIds, setReplyMessageIds] = useState([]);
@@ -96,12 +87,11 @@ const MessageBranch = (props) => {
                 dislikeClickHandlerDelegate={dislikeClickHandlerDelegate}
                 setMessageDataDelegate={setMessageDataDelegate}
                 updatePostDelegate={updatePostDelegate}                
-                contextMenuDelegate={contextMenuDelegate}
             />
             <button className='replyExpansionButton' onClick={updateSetShowReplies}>
                 {showReplies ? "/\\ Hide Replies /\\" : "\\/ Show Replies \\/"}
             </button>
-            <div className='recursiveChildOffset'>
+            <div id='subBranchContainer' className='recursiveChildOffset'>
                 <SubBranches 
                     showReplies={showReplies}
                     replyMessageIds={replyMessageIds}
