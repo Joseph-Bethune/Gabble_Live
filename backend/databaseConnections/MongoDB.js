@@ -2,12 +2,6 @@ import mongoose from "mongoose";
 
 const connectToMongoDB = async () => {
     try {
-        // local
-        const localConnectionPrefix = "mongodb://";
-        const connectionHost = process.env.MONGODB_LOCAL_URI_HOST;
-        const connectionPort = process.env.MONGODB_LOCAL_URI_PORT;
-        // remote
-        const clusterName = process.env.MONGODB_CLUSTER_NAME;
         // both
         const databaseName = process.env.MONGODB_DATABASE_NAME;
         const username = process.env.MONGODB_USERNAME;
@@ -18,9 +12,17 @@ const connectToMongoDB = async () => {
 
         if(connectToRemoteDB){
             console.log("Connecting to remote Mongo Database.");
+
+            const clusterName = process.env.MONGODB_CLUSTER_NAME;
+
             connectionString = `mongodb+srv://${username}:${password}@${clusterName.toLocaleLowerCase()}.wsqgvr3.mongodb.net/?appName=${clusterName}`;
         } else {
             console.log("Connecting to local Mongo Database.");
+
+            const localConnectionPrefix = "mongodb://";
+            const connectionHost = process.env.MONGODB_LOCAL_URI_HOST;
+            const connectionPort = process.env.MONGODB_LOCAL_URI_PORT;
+
             connectionString = `${localConnectionPrefix}${username}:${password}@${connectionHost}:${connectionPort}`;            
         }
 

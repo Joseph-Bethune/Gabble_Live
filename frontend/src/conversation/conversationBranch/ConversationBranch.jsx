@@ -16,8 +16,6 @@ const MessageBranch = (props) => {
     /*
         postId
         leftMargin
-        likeClickHandlerDelegate
-        dislikeClickHandlerDelegate
     //*/
     //#endregion
     
@@ -39,14 +37,6 @@ const MessageBranch = (props) => {
 
     const updatePostDelegate = (newPostData) => {
         setReplyMessageIds(newPostData.responses);
-    }
-    
-    const likeClickHandlerDelegate = (messagePostId) => {
-        if(props.likeClickHandlerDelegate) props.likeClickHandlerDelegate(messagePostId)  
-    }
-
-    const dislikeClickHandlerDelegate = (messagePostId) => {
-        if(props.dislikeClickHandlerDelegate) props.dislikeClickHandlerDelegate(messagePostId);        
     }
 
     const updateSetShowReplies = () => {
@@ -83,8 +73,6 @@ const MessageBranch = (props) => {
         <div className='branchMain' ref={divRef} style={style}>
             <ConversationLeaf
                 postId={props.postId}
-                likeClickHandlerDelegate={likeClickHandlerDelegate}
-                dislikeClickHandlerDelegate={dislikeClickHandlerDelegate}
                 setMessageDataDelegate={setMessageDataDelegate}
                 updatePostDelegate={updatePostDelegate}                
             />

@@ -36,8 +36,6 @@ const ConversationLeaf = (props) => {
         postId
         setMessageDataDelegate
         updatePostDelegate
-        likeClickHandlerDelegate
-        dislikeClickHandlerDelegate
         leafBodyClickHandlerDelegate
     //*/
     //#endregion
@@ -163,7 +161,6 @@ const ConversationLeaf = (props) => {
 
     const handleLikeClick = (e) => {
         e.stopPropagation();
-        if (props.likeClickHandlerDelegate) props.likeClickHandlerDelegate(postId);
         if (isLoggedIn_redux) {
             const newStatus = liked ? postLikeStatuses.neutral : postLikeStatuses.like;
             dispatch(changeLikeStatusThunk({ postId: postId, newStatus: newStatus }));
@@ -172,7 +169,6 @@ const ConversationLeaf = (props) => {
 
     const handleDislikeClick = (e) => {
         e.stopPropagation();
-        if (props.dislikeClickHandlerDelegate) props.dislikeClickHandlerDelegate(postId);
         if (isLoggedIn_redux) {
             const newStatus = disliked ? postLikeStatuses.neutral : postLikeStatuses.dislike;
             dispatch(changeLikeStatusThunk({ postId: postId, newStatus: newStatus }));

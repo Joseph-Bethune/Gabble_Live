@@ -121,7 +121,7 @@ const applyFrontendLinkingRoutes = () => {
 
 //#region main exectuion
 
-const setupAndStartServer = () => {
+const setupServer = () => {
     try {
         checkRoles();
         applyRequestBodyMiddleware();
@@ -134,7 +134,6 @@ const setupAndStartServer = () => {
             applyFrontendLinkingMiddleware();
             applyFrontendLinkingRoutes();
         }
-        startServer();
     } catch (exception) {
         console.log('There was an exception/error: ', exception);
         process.exit(1);
@@ -145,7 +144,8 @@ const main = () => {
     console.log("\n\n_____New Server Start_____\n");
     connectToMongoDB();
     mongoose.connection.once('open', () => {
-        setupAndStartServer();
+        setupServer();
+        startServer();
     });
 }
 
