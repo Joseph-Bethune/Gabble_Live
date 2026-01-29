@@ -2,10 +2,18 @@ import React from 'react'
 import { useRef, useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux'
-import { isLoggedIn, getUserName, getDisplayName } from '../userAuth/userAuthSlice';
+import { isLoggedIn, getUserId, getDisplayName } from '../userAuth/userAuthSlice';
 import './VerticalNavBar.css'
 
 const VerticalNavBar = (props) => {
+
+    //#region expected props
+    /*
+    showLogout
+    showLogin
+    showRegistration
+    //*/
+    //#endregion
 
     const navigate = useNavigate();
     const [showLinks, setShowLinks] = useState(false);
@@ -14,47 +22,47 @@ const VerticalNavBar = (props) => {
 
     const generateLoginLinkButtons = (startingIndex) => {
         let index = startingIndex;
-        let buttons = []
-        if (isLoggedIn_state) {
-            buttons = [
-                <button
-                    key={++index}
-                    onClick={() => { navigate('/user') }}
-                >
-                    {displayName}
-                </button>,
-                props.showLogout == true || props.showLogout == null ?
-                    <button
-                        key={++index}
-                        onClick={() => { navigate('/user/logout') }}
-                    >
-                        Sign Out
-                    </button>
-                    :
-                    null
-            ];
-        } else {
-            buttons = [
-                props.showLogin == true ?
-                    <button
-                        key={++index}
-                        onClick={() => { navigate('/user/login') }}
-                    >
-                        Sign In
-                    </button>
-                    :
-                    null,
-                props.showRegistration == true ?
-                    <button
-                        key={++index}
-                        onClick={() => { navigate('/user/register') }}
-                    >
-                        Sign Up
-                    </button>
-                    :
-                    null
-            ];
-        }
+        const profileButton = isLoggedIn_state ?
+            <button
+                key={++index}
+                onClick={() => { navigate('/user') }}
+            >
+                {displayName}
+            </button> :
+            null;
+
+        const loginButton = props.showLogin == true || !isLoggedIn_state ?
+            <button
+                key={++index}
+                onClick={() => { navigate('/user/login') }}
+            >
+                Sign In
+            </button>
+            :
+            null;
+        const logoutButton = isLoggedIn_state ?
+            <button
+                key={++index}
+                onClick={() => { navigate('/user/logout') }}
+            >
+                Sign Out
+            </button> :
+            null;
+
+        const registrationButton = props.showRegistration == true || !isLoggedIn_state ?
+            <button
+                key={++index}
+                onClick={() => { navigate('/user/register') }}
+            >
+                Sign Up
+            </button> :
+            null;
+        let buttons = [
+            profileButton,
+            loginButton,
+            logoutButton,
+            registrationButton
+        ];
         buttons = buttons.filter((element) => element != null);
         return {
             buttons: buttons,

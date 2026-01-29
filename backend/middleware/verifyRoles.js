@@ -27,24 +27,26 @@ export const getDefaultRoleCode = () => {
 
 export const createVerifyRolesMiddleware = (...allowedRoles) => {
     return (req, res, next) => {
-        if (!req?.roles) {
-            res.status(401).json({"success": false, "message": "user not authenticated"});
+        const reqUserRoles = req.userInfo?.roles;
+
+        if (!reqUserRoles) {
+            res.status(401).json({success: false, message: "user not authenticated"});
             next();
             return;
         };
 
         if(!allowedRoles || allowedRoles.length < 1) {
-            res.status(500).json({"success": false, "message": "no roles allowed for route"});
+            res.status(500).json({success: false, message: "no roles allowed for route"});
             next();
             return;
         }
 
-        const rolesArray = [...allowedRoles];
-
-        const result = req.roles.map(role => rolesArray.includes(role)).find(val => val === true);
+        const rolesArray = [...allowedRoles];        
+        
+        const result = reqUserRoles.map(role => rolesArray.includes(role)).find(val => val === true);
 
         if(!result) {
-            res.status(401).json({"success": false, "message": "user not authorized"});
+            res.status(401).json({success: false, message: "user not authorized"});
             next();
             return;
         }

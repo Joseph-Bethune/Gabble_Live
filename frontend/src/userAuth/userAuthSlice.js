@@ -9,7 +9,7 @@ export const thunkStatuses = {
 }
 
 const initialState = {
-    username: null,
+    id: null,
     displayName: null,
     accessToken: null,
     thunkStatuses: {
@@ -34,28 +34,28 @@ const getAuthServerURL = () => {
 
 //#region saving user data to local session
 
-export const saveLoginDataToSS = (username, accessToken, displayName) => {
-    sessionStorage.setItem('username', username);
+export const saveLoginDataToSS = (id, accessToken, displayName) => {
+    sessionStorage.setItem('id', id);
     sessionStorage.setItem('accessToken', accessToken);
     sessionStorage.setItem('displayName', displayName);
 }
 
 export const clearLoginDataFromSS = () => {
-    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('id');
     sessionStorage.removeItem('accessToken');
     sessionStorage.removeItem('displayName');
 }
 
 export const getLoginDataFromSS = () => {
-    const username = sessionStorage.getItem('username');
+    const id = sessionStorage.getItem('id');
     const displayName = sessionStorage.getItem('displayName');
     const accessToken = sessionStorage.getItem('accessToken');
 
     return {
-        username: username,
+        id: id,
         accessToken: accessToken,
         displayName: displayName,
-        isLoggedIn: (username != null && accessToken != null),
+        isLoggedIn: (id != null && accessToken != null),
     }
 }
 
@@ -67,15 +67,15 @@ export const registerNewUserThunk = createAsyncThunk(
     "userAuth/registerNewUser",
     async (params, thunkAPI) => {
         const state = thunkAPI.getState();
-        const { username, password, displayName } = params;
+        const { email, password, displayName } = params;
 
         const url = getAuthServerURL() + "/users/register";
-        const data = { username, password, displayName };
+        const data = { email, password, displayName };
         const config = {};
 
         try {
             const response = await axios.post(url, data, config);
-            return { ...response.data, username };
+            return { ...response.data, email };
         } catch (err) {
             return thunkAPI.rejectWithValue(err.response.data);
         }
@@ -86,12 +86,11 @@ export const loginUserThunk = createAsyncThunk(
     "userAuth/loginUser",
     async (params, thunkAPI) => {
         const state = thunkAPI.getState();
-        const { username, password } = params;
+        const { email, password } = params;
 
         const url = getAuthServerURL() + "/users/login";
-        const data = { username, password };
+        const data = { email, password };
         const config = { withCredentials: true };
-
 
         try {
             const response = await axios.post(
@@ -100,7 +99,7 @@ export const loginUserThunk = createAsyncThunk(
                 config
             );
 
-            return { ...response.data, username };
+            return { ...response.data, username: email };
         } catch (err) {
             return thunkAPI.rejectWithValue(err.response.data);
         }
@@ -284,9 +283,9 @@ const userAuthSlice = createSlice({
             state.thunkStatuses.checkAccessToken = thunkStatuses.idle;
         },
         setStateFromSessionStorage: (state) => {
-            const { username, accessToken, displayName } = getLoginDataFromSS();
+            const { id, accessToken, displayName } = getLoginDataFromSS();
 
-            state.username = username;
+            state.id = id;
             state.displayName = displayName;
             state.accessToken = accessToken;
         },
@@ -306,7 +305,11 @@ const userAuthSlice = createSlice({
                 state.thunkStatuses.registration = { status: thunkStatuses.rejected, error: action.payload.error };
             })
             .addCase(registerNewUserThunk.fulfilled, (state, action) => {
-                state.username = action.payload.username;
+                const {id, accessToken, displayName} = action.payload;
+                state.id = action.payload.id;
+                state.accessToken = action.payload.accessToken;
+                state.displayName = action.payload.displayName;
+                saveLoginDataToSS(id, accessToken, displayName);
                 state.thunkStatuses.registration = { status: thunkStatuses.fulfilled, error: null };
             }) // login user thunk
             .addCase(loginUserThunk.pending, (state, action) => {
@@ -317,10 +320,10 @@ const userAuthSlice = createSlice({
             })
             .addCase(loginUserThunk.fulfilled, (state, action) => {
                 state.accessToken = action.payload.accessToken;
-                state.username = action.payload.username;
+                state.id = action.payload.id;
                 state.displayName = action.payload.displayName;
                 state.thunkStatuses.login = { status: thunkStatuses.fulfilled, error: null };
-                saveLoginDataToSS(action.payload.username, action.payload.accessToken, action.payload.displayName);
+                saveLoginDataToSS(action.payload.id, action.payload.accessToken, action.payload.displayName);
             }) // logout user thunk
             .addCase(logoutUserThunk.pending, (state, action) => {
                 state.thunkStatuses.logout = thunkStatuses.pending;
@@ -330,7 +333,7 @@ const userAuthSlice = createSlice({
             })
             .addCase(logoutUserThunk.fulfilled, (state, action) => {
                 state.accessToken = null;
-                state.username = null;
+                state.id = null;
                 state.displayName = null;
                 state.thunkStatuses.logout = thunkStatuses.fulfilled;
                 clearLoginDataFromSS();
@@ -399,7 +402,7 @@ const userAuthSlice = createSlice({
                 if(action.payload.isLoggedIn){
                     state.accessToken = action.payload.accessToken;
                     state.displayName = action.payload.displayName;
-                    state.username = action.payload.username;
+                    state.id = action.payload.id;
                 }
                 state.thunkStatuses.setAuthStateFromStorage = { status: thunkStatuses.fulfilled, error: null };
             })
@@ -407,11 +410,11 @@ const userAuthSlice = createSlice({
 });
 
 export const isLoggedIn = (state) => {
-    const hasUsername = state.userAuthSlice.username != null;
+    const hasId = state.userAuthSlice.id != null;
     const hasAccessToken = state.userAuthSlice.accessToken != null;
-    return hasUsername && hasAccessToken;
+    return hasId && hasAccessToken;
 };
-export const getUserName = (state) => state.userAuthSlice.username;
+export const getUserId = (state) => state.userAuthSlice.id;
 export const getDisplayName = (state) => state.userAuthSlice.displayName;
 export const getUserAccessToken = (state) => state.userAuthSlice.accessToken;
 

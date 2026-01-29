@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux'
-import { logoutUserThunk, getLogoutThunkStatus, thunkStatuses, resetLogoutThunkStatus } from '../userAuthSlice.js'
+import { logoutUserThunk, getLogoutThunkStatus, thunkStatuses, resetLogoutThunkStatus, getDisplayName } from '../userAuthSlice.js'
 import { getLoginDataFromSS } from '../userAuthSlice.js'
 import { useNavigate } from 'react-router-dom';
 import "../styles/userAuth.css";
@@ -10,7 +10,7 @@ const Logout = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const [username, setUserName] = useState('');
+    const displayName = useSelector(getDisplayName);
     const [accessToken, setAccessToken] = useState('');
     const [isLoggedIn, setisLoggedIn] = useState(false);
 
@@ -24,9 +24,8 @@ const Logout = () => {
 
     const pullDataFromSession = () => {
         const tempData = getLoginDataFromSS();
-        setUserName(tempData.username);
         setAccessToken(tempData.accessToken);
-        setisLoggedIn(Boolean(tempData.username) && Boolean(tempData.accessToken));
+        setisLoggedIn(Boolean(tempData.id) && Boolean(tempData.accessToken));
         setDataWasPulledFromSession(true);
     }
 
@@ -53,7 +52,6 @@ const Logout = () => {
         if (logoutThunkStatus === "successful") {
             resetLogoutThunkStatus();
             pullDataFromSession();
-            console.log(username, isLoggedIn);
         }
     }, [logoutThunkStatus])
 
@@ -73,7 +71,7 @@ const Logout = () => {
                 <VerticalNavBar links={getLinks()} showLogout={false} />
                 <div id='bodyDiv' className='centerDiv'>
 
-                    <h2>{username}</h2>
+                    <h2>{displayName}</h2>
                     <h2>Do you want to logout?</h2>
                     <button onClick={handleLogout}>
                         Logout

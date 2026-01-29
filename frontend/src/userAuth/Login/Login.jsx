@@ -6,7 +6,7 @@ import { refreshLoginThunk, resetRefreshLoginThunkStatus, getRefreshLoginThunkSt
 import { setAuthStateFromStorageThunk, getAuthStateThunkStatus, getAuthStateThunkStatusError, resetSetAuthStateFromStorageThunkStatus } from '../userAuthSlice.js';
 import {
     loginUserThunk, getLoginThunkStatus, getLoginThunkStatusError, resetLoginThunkStatus,
-    isLoggedIn, getUserAccessToken, getUserName,
+    isLoggedIn, getUserAccessToken, getUserId,
 } from '../userAuthSlice.js';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import "../styles/userAuth.css";
@@ -16,13 +16,13 @@ const Login = (props) => {
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const userRef = useRef();
+    const emailRef = useRef();
     const passwordRef = useRef();
     const { state } = useLocation();
 
-    const [userName, setUserName] = useState('');
-    const [userNameFocus, setUserNameFocus] = useState(false);
-    const [validName, setValidName] = useState(false);
+    const [email, setEmail] = useState('');
+    const [emailFocus, setEmailFocus] = useState(false);
+    const [validEmail, setValidEmail] = useState(false);
 
     const [pwd, setPwd] = useState('');
     const [pwdFocus, setPwdFocus] = useState(false);
@@ -35,21 +35,21 @@ const Login = (props) => {
 
         dispatch(setAuthStateFromStorageThunk());
 
-        if (props.username) {
-            setUserName(props.username);
+        if (props.email) {
+            setEmail(props.email);
             passwordRef.current.focus();
-        } else if (state?.username) {
-            setUserName(state.username);
+        } else if (state?.email) {
+            setEmail(state.email);
             passwordRef.current.focus();
         } else {
-            userRef.current.focus();
+            emailRef.current.focus();
         }
     }, []);
 
     useEffect(() => {
-        const result = userName && userName.length > 0;
-        setValidName(result);
-    }, [userName]);
+        const result = email && email.length > 0;
+        setValidEmail(result);
+    }, [email]);
 
     useEffect(() => {
         const validPwd = pwd && pwd.length > 0;
@@ -61,7 +61,7 @@ const Login = (props) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        dispatch(loginUserThunk({ username: userName, password: pwd }));
+        dispatch(loginUserThunk({ email: email, password: pwd }));
     }
 
     //#endregion
@@ -183,19 +183,19 @@ const Login = (props) => {
                         {errorText}
                     </div>
                     <form className="verticalForm authForm" onSubmit={handleSubmit}>
-                        <label htmlFor="username">
-                            Username
+                        <label htmlFor="email">
+                            Email
                         </label>
                         <input
                             type="text"
-                            id="username"
-                            ref={userRef}
+                            id="email"
+                            ref={emailRef}
                             autoComplete="off"
-                            onChange={(e) => setUserName(e.target.value)}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
-                            onFocus={() => setUserNameFocus(true)}
-                            onBlur={() => setUserNameFocus(false)}
-                            value={userName}
+                            onFocus={() => setEmailFocus(true)}
+                            onBlur={() => setEmailFocus(false)}
+                            value={email}
                         />
 
                         <label htmlFor="password">
@@ -212,7 +212,7 @@ const Login = (props) => {
                             value={pwd}
                         />
 
-                        <button disabled={!validName || !validPwd ? true : false} >
+                        <button disabled={!validEmail || !validPwd ? true : false} >
                             Login
                         </button>
                     </form>

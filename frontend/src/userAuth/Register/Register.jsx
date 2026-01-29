@@ -29,13 +29,13 @@ const USERNAME_REGEX = {
 
 const Register = () => {
 
-    const userRef = useRef();
+    const emailRef = useRef();
     const errRef = useRef();
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const [username, setUsername] = useState('');
-    const [userFocus, setUserFocus] = useState(false);
+    const [email, setEmail] = useState('');
+    const [emailFocus, setEmailFocus] = useState(false);    
 
     const [pwd, setPwd] = useState('');
     const [pwdFocus, setPwdFocus] = useState(false);
@@ -45,10 +45,13 @@ const Register = () => {
     const [matchFocus, setMatchFocus] = useState(false);
     const [confirmPwdErrMsg, setConfirmPwdErrMsg] = useState('Invalid Password');
 
+    const [username, setUsername] = useState('');
+    const [userFocus, setUserFocus] = useState(false);
+
     const [errMsg, setErrMsg] = useState('');
 
     useEffect(() => {
-        userRef.current.focus();
+        emailRef.current.focus();
     }, []);
 
     useEffect(() => {
@@ -64,8 +67,25 @@ const Register = () => {
             setErrMsg("Invalid Entry");
             return;
         }
-        dispatch(registerNewUserThunk({ username: username, password: pwd, displayName: username }));
+        dispatch(registerNewUserThunk({ email: email, password: pwd, displayName: username }));
     }
+
+    //#region email validity test
+
+    const [validEmail, setValidEmail] = useState({length: false, all: false});
+
+    useEffect(() => {
+        const length = email.length > 4;
+
+        const newValue = {
+            length: length,
+            all: length,
+        }
+
+        setValidEmail(newValue);
+    }, [email])
+
+    //#endregion
 
     //#region username validity test
 
@@ -169,7 +189,7 @@ const Register = () => {
             dispatch(resetRegistrationThunkStatus());
             setErrorClasses("hidden");
             setErrorText(null);
-            navigate("/user/login", { state: { username: username } });
+            navigate("/user");
         } else if (registrationThunkStatus == thunkStatuses.rejected) {
             if (registrationErrorMessage != null) {
                 setErrorClasses("errorMessage");
@@ -206,18 +226,39 @@ const Register = () => {
                         {errorText}
                     </div>
                     <form className='verticalForm authForm regForm' onSubmit={handleSubmit}>
+                        <div id="email" className='flex-column'>
+                            <label htmlFor="email">
+                                Email : {validEmail.all ? (<span className="valid">Good</span>) : (<span className="invalid">Invalid Email</span>)}
+                            </label>
+                            <input
+                                type="text"
+                                id="email"
+                                ref={emailRef}
+                                autoComplete="off"
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                aria-invalid={validEmail.all ? "false" : "true"}
+                                aria-describedby='uidnote'
+                                onFocus={() => setEmailFocus(true)}
+                                onBlur={() => setEmailFocus(false)}
+                            />
+                            <div id="uidnote" className={emailFocus && !validEmail.all ? "instructions" : "offscreen"}>
+                                <div className={validEmail.length ? 'valid' : 'invalid'}>
+                                    Longer than 3 characters.
+                                </div>
+                            </div>
+                        </div>
                         <div id="username" className='flex-column'>
-                            <label htmlFor="username">Username :
-                                {validName.all ? (<span className="valid">Good</span>) : (<span className="invalid">Invalid Username</span>)}
+                            <label htmlFor="username">
+                                Username : {validName.all ? (<span className="valid">Good</span>) : (<span className="invalid">Invalid Username</span>)}
                             </label>
                             <input
                                 type="text"
                                 id="username"
-                                ref={userRef}
                                 autoComplete="off"
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
-                                aria-invalid={validName ? "false" : "true"}
+                                aria-invalid={validName.all ? "false" : "true"}
                                 aria-describedby='uidnote'
                                 onFocus={() => setUserFocus(true)}
                                 onBlur={() => setUserFocus(false)}

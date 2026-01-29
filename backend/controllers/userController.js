@@ -3,16 +3,7 @@ import { UserModel } from '../models/User.js';
 import { PostModel } from '../models/Post.js';
 import { getDefaultRoleCode } from '../middleware/verifyRoles.js'
 import { logEvent } from '../middleware/eventLogger.js'
-import { generateAccessToken, generateRefreshToken, decodeAccessToken, decodeRefreshToken } from '../middleware/verifyJWT.js';
-
-
-const getCookieOptions = () => {
-    if(process.env.NODE_ENV == "production") {
-        return { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }
-    } else {
-        return { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }
-    }
-}
+import { generateAccessToken, generateRefreshToken, decodeAccessToken, decodeRefreshToken, getCookieOptions } from '../middleware/verifyJWT.js';
 
 const USERNAME_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/;
 
@@ -30,24 +21,30 @@ const convertToOutputPostModel = (inputPostDoc) => {
 
 //#region route handlers
 
-const handleRegisterAttempt = async (req, res) => {
+const register = async (req, res) => {
     if (res.headersSent) return;
 
     // extract request data
-    if (!req.body) return res.status(400).json({ success: false, 'error': 'Request is missing body data.' });
-    const { username, password, displayName } = req.body;
+    if (!req.body) return res.status(400).json({ success: false, error: 'Request is missing body data.' });
+    const { email, password, displayName } = req.body;
 
-    if (!username || !password) return res.status(400).json({ success: false, 'error': 'Username and password are required' });
+    //#region missing request data checks
 
-    if (!displayName) return res.status(400).json({ success: false, 'error': 'Display name required.' });
+    if (!email) return res.status(400).json({ success: false, error: 'Password, email and displayName are required. You are missing the email.' });
+
+    if (!password) return res.status(400).json({ success: false, error: 'Password, email and displayName are required. You are missing the password.' });
+
+    if (!displayName) return res.status(400).json({ success: false, 'error': 'Password, email and displayName are required. You are missing the displayName.' });
+
+    //#endregion
 
     // check for duplicate usernames in the db
-    let duplicateName = await UserModel.findOne({ username: username }).exec();
-    if (duplicateName) return res.status(409).json({ success: false, 'error': 'Cant register new user with that name. User already exists.' });
+    let duplicateUser = await UserModel.findOne({ email: email }).exec();
+    if (duplicateUser) return res.status(409).json({ success: false, error: 'Cant register new user with that email: it is already in use.' });
 
     // check for duplicate usernames in the db
-    duplicateName = await UserModel.findOne({ displayName: displayName }).exec();
-    if (duplicateName) return res.status(409).json({ success: false, 'error': 'Cant register new user with that display name: it is already in use.' });
+    duplicateUser = await UserModel.findOne({ displayName: displayName }).exec();
+    if (duplicateUser) return res.status(409).json({ success: false, error: 'Cant register new user with that display name: it is already in use.' });
 
     try {
         // encrypt password
@@ -57,30 +54,53 @@ const handleRegisterAttempt = async (req, res) => {
         const newUserRoles = [getDefaultRoleCode()];
 
         // create and store new user
-        const result = await UserModel.create({
-            "username": username,
-            "password": hashedPwd,
-            "displayName": displayName,
-            "roles": newUserRoles
+        const newUser = await UserModel.create({
+            email: email,
+            password: hashedPwd,
+            displayName: displayName,
+            roles: newUserRoles
         });
 
-        res.status(201).json({ 'success': true, 'message': `New user ${result.username} created.` });
+        // create jwt tokens
+        const accessToken = generateAccessToken(newUser);
+        const refreshToken = generateRefreshToken(newUser);
+
+        newUser.refreshToken = refreshToken;
+        await newUser.save();
+
+        res.cookie('jwtRefreshToken', refreshToken, getCookieOptions());
+        res.status(201).json({ 
+            success: true, 
+            message: `New user ${newUser.displayName} created.`, 
+            id: newUser._id, 
+            accessToken: accessToken, 
+            displayName: newUser.displayName});
+        return;
     } catch (error) {
-        res.status(500).json({ 'message': error.message });
+        return res.status(500).json({ success: false, message: error.message });
     }
 }
 
-const handleLoginAttempt = async (req, res) => {
+const login = async (req, res) => {
     if (res.headersSent) return;
 
     // extract request data
-    if (!req.body) return res.status(400).json({ success:false, 'error': 'Request is missing body data.' });
-    const { username, password } = req.body;
+    if (!req.body) return res.status(400).json({ success:false, error: 'Request is missing body data.' });
+    const { email, password } = req.body;
 
-    if (!username || !password) return res.status(400).json({ success:false, 'error': 'Username and password are required' });
+    //#region missing request data checks
 
-    const foundUser = await UserModel.findOne({ username: username }).exec();
-    if (!foundUser) return res.status(401).json({ success:false, 'error': "No user with that username" });
+    if (!email) return res.status(400).json({ success: false, error: 'Password, email and displayName are required. You are missing the email.' });
+
+    if (!password) return res.status(400).json({ success: false, error: 'Password, email and displayName are required. You are missing the password.' });
+
+    //#endregion
+
+    const foundUser = await UserModel.findOne({ email: email }).exec();
+    if (!foundUser) {
+        logEvent(`A user tried to login with the email \"${email}\" and no matching user was found.`);
+        return res.status(401).json({ success:false, error: "Login failed." });
+    }
 
     const match = await bcrypt.compare(password, foundUser.password);
 
@@ -94,51 +114,60 @@ const handleLoginAttempt = async (req, res) => {
         const result = await foundUser.save();
 
         res.cookie('jwtRefreshToken', refreshToken, getCookieOptions());
-        res.status(200).json({ success: true, 'message': `User ${username} is logged in.`, 'accessToken': accessToken, 'displayName': foundUser.displayName });
+        res.status(200).json({ success: true, message: `User ${foundUser.displayName} is logged in.`, accessToken: accessToken, displayName: foundUser.displayName });
         return;
     } else {
-        res.status(401).json({ success:false, 'error': 'Incorrect password.' })
+        logEvent(`A user tried to login with the email \"${email}\" and an incorrect password.`);
+        res.status(401).json({ success:false, error: 'Login failed.' });
         return;
     }
 }
 
-const handleRefreshToken = async (req, res) => {
+const refreshLogin = async (req, res) => {
     if (res.headersSent) return;
 
-    const tokenData = decodeRefreshToken(req);
+    const tokenData = await decodeRefreshToken(req);
 
     // does the user have a refresh token
     const refreshToken = tokenData.refreshToken;
-    if (!refreshToken) return res.status(401).json({ success: false, message: "missing jwt refresh token" });
+    if (!refreshToken) {
+        logEvent("A user tried to refresh their login but no refresh token was present.");
+        return res.status(401).json({ success: false, message: "User not authorized." });
+    }
 
     // is refresh token in db
-    const foundUser = await UserModel.findOne({ refreshToken: refreshToken }).exec();
-    if (!foundUser) return res.status(403).json({ success: false });
+    const foundUser = await UserModel.findOne({refreshToken: refreshToken}).exec();
+    if (!foundUser) {
+        logEvent("A user tried to refresh their login but no match could be found for their refresh token.");
+        return res.status(403).json({ success: false, message: "User not authorized." });
+    }
 
     if (!tokenData.success) {
         if (foundUser.username) {
-            logEvent(`A request to for a new access token using an out-of-date refresh token for ${foundUser.username} has been submitted. Removing refresh token from database.`);
+            logEvent(`A request to for a new access token using an out-of-date refresh token for ${foundUser.displayName} has been submitted. 
+                Removing refresh token from database.`);
 
             //delete refresh token in database
             foundUser.refreshToken = "";
             const result = await foundUser.save();
         }
 
-        return res.status(403).json({ success: false });
+        if(tokenData.message){
+            logEvent(tokenData.message);
+        }
+
+        return res.status(403).json({ success: false, message: "User not authorized."});
     }
 
     const accessToken = generateAccessToken(foundUser);
-    return res.status(200).json({ success: true, accessToken, username: foundUser.username, displayName: foundUser.displayName });
+    return res.status(200).json({ success: true, accessToken: accessToken, displayName: foundUser.displayName, message: "Login successful." });
 }
 
-const handleLogout = async (req, res) => {
+const logout = async (req, res) => {
     if (res.headersSent) return;
 
-    const refreshToken = req.cookies?.jwtRefreshToken
-    if (!refreshToken) return res.status(400).json({ success: false, message: "no session cookies available" });
-
     // is refresh token in db
-    const foundUser = await UserModel.findOne({ refreshToken: refreshToken }).exec();
+    const foundUser = req.userFromToken;
     if (!foundUser) return res.status(400).json({ success: false, message: `No match found for token.` });
 
     //delete refresh token in database
@@ -146,30 +175,30 @@ const handleLogout = async (req, res) => {
     const result = await foundUser.save();
 
     res.clearCookie('jwtRefreshToken', getCookieOptions());
-    return res.status(200).json({ success: true, message: `${foundUser.username} successfully logged out.` }); // secure: true - only serves on https
+    return res.status(200).json({ success: true, message: `${foundUser.displayName} successfully logged out.` }); // secure: true - only serves on https
 }
 
 const changeDisplayName = async (req, res) => {
     if (res.headersSent) return;
 
     // assumes that the middleware has already decoded the token and attached the username to the request
-    const userFromToken = await UserModel.findOne({ username: req.user }).exec();
-    if(!userFromToken) return res.status(400).json({ 'error': "Request doesn't have a valid token." });
+    const userFromToken = req.userFromToken;
+    if(!userFromToken) return res.status(400).json({ success: false, error: "Request couldn't find user from token." });
 
     if (!req.body) return res.status(400).json({ 'error': 'Request is missing body data.' });
     
     const newDisplayName = req.body?.newDisplayName;
-    if(!newDisplayName) return res.status(400).json({ success: false, 'error': 'No new display name given.' });    
+    if(!newDisplayName) return res.status(400).json({ success: false, error: 'No new display name given.' });    
 
     // ensures that the new display name is not the same as the current display name
     const currentDisplayName = userFromToken.displayName;
     if(currentDisplayName.toLocaleLowerCase() == newDisplayName.toLocaleLowerCase()){
-        return res.status(200).json({ success:false, 'error': "The new displayname is duplicate of the current displayname." });
+        return res.status(200).json({ success:false, error: "The new displayname is duplicate of the current displayname." });
     }
     
     // check display name validity
     const isDisplayNameValid = USERNAME_REGEX.test(newDisplayName);
-    if(!isDisplayNameValid) return res.status(400).json({ success: false, 'error': `"${newDisplayName}" is not a valid display name.` });
+    if(!isDisplayNameValid) return res.status(400).json({ success: false, error: `"${newDisplayName}" is not a valid display name.` });
 
     // check displayname uniqueness
     // must be unique among all current and past display names
@@ -177,16 +206,10 @@ const changeDisplayName = async (req, res) => {
     const allUsers = await UserModel.find({});
     const isDisplayNameUnique = !allUsers.some((element) => {
         // if the current user is the on submitting the request, then skip this iteration
-        if(element.username === userFromToken.username){
+        if(`${element._id}` == `${userFromToken._id}`){
             //console.log("The current user being tested is the one who submitted the request. Skipping...");
             return false;            
-        }
-        
-        // checks new display name against any current user names
-        if(element.username.toLocaleLowerCase() == newDisplayName.toLocaleLowerCase()){
-            //console.log(`The requested display name matches username ${element.username}`);
-            return true;
-        }
+        }    
 
         // checks new display name against any current display names
         if(element.displayName.toLocaleLowerCase() == newDisplayName.toLocaleLowerCase()){
@@ -206,7 +229,7 @@ const changeDisplayName = async (req, res) => {
             return true;
         }
     })
-    if(!isDisplayNameUnique) return res.status(400).json({ success: false, 'error': `The display name "${newDisplayName}" is taken.` });
+    if(!isDisplayNameUnique) return res.status(400).json({ success: false, error: `The display name "${newDisplayName}" is taken.` });
     
     // add current display name to previous display names list
     {
@@ -218,8 +241,8 @@ const changeDisplayName = async (req, res) => {
         });
 
         if(!elementFound){
-            previousDisplayNames.push(currentDisplayName);
-            userFromToken.previousDisplayNames = previousDisplayNames;
+            previousDisplayNames.unshift(currentDisplayName);
+            userFromToken.previousDisplayNames = previousDisplayNames.splice(0, 5);
         }
     }
 
@@ -229,33 +252,29 @@ const changeDisplayName = async (req, res) => {
     // applies update to database
     const status = await userFromToken.save();
 
-    return res.status(200).json({success: true, newDisplayName:newDisplayName, message:`${userFromToken.username}'s display name updated to ${newDisplayName}.`});
+    return res.status(200).json({success: true, newDisplayName:newDisplayName, message:`User's display name updated to ${newDisplayName}.`});
 }
 
 const getUserInfo = async (req, res) => {
     if (res.headersSent) return;
 
-    if (!req.body) return res.status(400).json({ 'error': 'Request is missing body data.' });
+    if (!req.body) return res.status(400).json({ success: false, error: 'Request is missing body data.' });
 
-    const tokenData = decodeAccessToken(req);
-    let userFromToken = null;
-    if (tokenData.success) {
-        const foundUser = await UserModel.findOne({ username: tokenData.username }).exec();
-        if (foundUser != null) {
-            userFromToken = foundUser;
-        }
-    }
+    const tokenData = await decodeAccessToken(req);
+    const userFromToken = tokenData.userFromToken;
 
     let searchTargetUser = null;
-    if (req.body?.userId) {
-        searchTargetUser = await UserModel.findById(req.body.userId).exec();
+    const targetUserId = req.body?.userId;
+    const targetUserDisplayName = req.body?.displayName;
+    if (targetUserId) {
+        searchTargetUser = await UserModel.findById(targetUserId).exec();
         if (!searchTargetUser) {
-            return res.status(404).json({ success: false, message: `No user found with userId "${req.body.userId}."` });
+            return res.status(404).json({ success: false, message: `No user found with userId "${targetUserId}."` });
         }
-    } else if (req.body?.displayName) {
-        searchTargetUser = await UserModel.findOne({ displayName: req.body.displayName }).exec();
+    } else if (targetUserDisplayName) {
+        searchTargetUser = await UserModel.findOne({ displayName: targetUserDisplayName }).exec();
         if (!searchTargetUser) {
-            return res.status(404).json({ success: false, message: `No user found with displayName "${req.body.displayName}."` });
+            return res.status(404).json({ success: false, message: `No user found with displayName "${targetUserDisplayName}."` });
         }
     } else {
         return res.status(404).json({ success: false, message: `No search data sent, can't find user.` });
@@ -266,10 +285,8 @@ const getUserInfo = async (req, res) => {
         displayName: searchTargetUser.displayName,
     }
 
-    const hasPermission = (
-        (`${userFromToken?._id}` === `${searchTargetUser?._id}`) // the requester is verified to be the subject of the information request
-    );
-
+    const hasPermission = (`${userFromToken?._id}` == `${searchTargetUser?._id}`); // the requester is verified to be the subject of the information request
+    
     const allDataRequested = req.body.sendAllData;
 
     if (allDataRequested) {
@@ -281,6 +298,7 @@ const getUserInfo = async (req, res) => {
             });
         }
 
+        output.email = searchTargetUser.email;
         output.previousDisplayNames = searchTargetUser.previousDisplayNames;
         const postsLiked = await Promise.all(
             (await PostModel.find({ likes: { $in : searchTargetUser._id} }).exec()).map((element) => convertToOutputPostModel(element))
@@ -338,8 +356,8 @@ const checkAccessToken = (req, res) => {
     if (!output) return res.status(401).json({ success: false, message: "unknown error decoding access token" });
 
     if (output.success) {
-        req.user = output.username;
-        req.roles = output.roles;
+        req.user = output.userFromToken;
+        req.roles = output.userFromToken.roles;
         res.status(200).json({ success: true, message: `Access token is valid.` });
     } else {
         res.status(403).json(output); //invalid token
@@ -378,15 +396,15 @@ const checkRefreshToken = (req, res) => {
 //#endregion
 
 const userController = {
-    registerNewUser: handleRegisterAttempt,
-    handleLoginAttempt: handleLoginAttempt,
-    handleRefreshToken: handleRefreshToken,
-    handleLogout: handleLogout,
-    changeDisplayName: changeDisplayName,
-    getUserInfo: getUserInfo,
-    checkAccessToken: checkAccessToken,
-    checkRefreshToken: checkRefreshToken,
-    getAllUseres: getAllUsers
+    register,
+    login,
+    refreshLogin,
+    logout,
+    changeDisplayName,
+    getUserInfo,
+    checkAccessToken,
+    checkRefreshToken,
+    getAllUsers
 };
 
 export default userController;

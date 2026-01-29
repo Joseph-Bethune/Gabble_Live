@@ -1,19 +1,19 @@
 import jwt from 'jsonwebtoken';
+import { UserModel } from '../models/User.js';
 
-//#region jwt tokens
-
-const accessTokenLifeSpan = '1d';
+const accessTokenLifeSpan = '1h';
 const refreshTokenLifeSpan = '1d';
 
 //#region token encoding
 
 export const generateTokenPayload = (user) => {
     return {
-        "userInfo": {
-            "username": user.username,
-            "roles": Object.values(user.roles),
+        userInfo: {
+            id: user._id,
+            email: user.email,
+            roles: Object.values(user.roles),
         },
-        "originTimestamp": new Date()
+        originTimestamp: new Date()
     }
 }
 
@@ -37,9 +37,8 @@ export const generateRefreshToken = (user) => {
 
 //#region token decoding
 
-//region extracts data encoded in jwt token from an api request
-export const decodeAccessToken = (req) => {
-    
+export const decodeAccessToken = async (req) => {
+
     const authHeader = req.headers.authorization || req.headers.Authorization;
     if (!authHeader?.startsWith('Bearer ')) return { success: false, code: 401, message: "no headers for access token" };
 
@@ -49,28 +48,33 @@ export const decodeAccessToken = (req) => {
     let output = {
         accessToken: token
     };
-    jwt.verify(
-        token,
-        process.env.ACCESS_TOKEN_SECRET,
-        (err, decoded) => {
-            if (err) {
-                output.success = false;
-                output.message = 'error decoding access token: ' + err;
-                output.code = 403;
-            } else {
-                output.success = true;
-                output.username = decoded.userInfo.username;
-                output.roles = decoded.userInfo.roles;
-                output.message = `access token for ${decoded.userInfo.username} is valid`;
-                output.code = 200;
-            }
+
+    try {
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+        if (decoded) {
+            const userFromToken = await UserModel.findById(decoded.userInfo.id).select('-password').exec();
+
+            output.userFromToken = userFromToken;
+            output.success = true;
+            output.userInfo = decoded.userInfo;
+            output.message = `Access token for ${userFromToken.displayName} is valid.`;
+            output.code = 200;
+
+        } else {
+            output.success = false;
+            output.message = 'Unknown error decoding token.';
+            output.code = 403;
         }
-    );
+    } catch (err) {
+        output.success = false;
+        output.message = 'error decoding access token: ' + err;
+        output.code = 403;
+    }
     return output;
 }
 
-// extracts data encoded in jwt token from an api request
-export const decodeRefreshToken = (req) => {
+export const decodeRefreshToken = async (req) => {
 
     const token = req.cookies?.jwtRefreshToken;
     if (!token) return { success: false, code: 401, message: "no refresh token" };
@@ -79,55 +83,82 @@ export const decodeRefreshToken = (req) => {
         refreshToken: token
     };
 
-    jwt.verify(
-        token,
-        process.env.REFRESH_TOKEN_SECRET,
-        (err, decoded) => {
-            if (err) {
-                output.success = false;
-                output.message = 'error decoding refresh token: ' + err;
-                output.code = 403;
-            } else {
-                output.success = true;
-                output.username = decoded.userInfo.username;
-                output.roles = decoded.userInfo.roles;
-                output.message = `refresh token for ${decoded.userInfo.username} is valid`;
-                output.code = 403;
-            }
+    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+
+    try {
+        if (decoded) {
+            const userFromToken = await UserModel.findById(decoded.userInfo.id).select('-password').exec();
+
+            output.userFromToken = userFromToken;
+            output.success = true;
+            output.userInfo = decoded.userInfo;
+            output.message = `Refresh token for ${userFromToken.displayName} is valid.`;
+            output.code = 200;
+
+        } else {
+            output.success = false;
+            output.message = 'Unknown error decoding token.';
+            output.code = 403;
         }
-    );
+    } catch (err) {
+        output.success = false;
+        output.message = 'Error decoding token: ' + err;
+        output.code = 403;
+    }
+    return output;
+}
+
+//#endregion
+
+//#region cookie options
+
+export const getCookieOptions = () => {
+
+    const output = {
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true,
+    };
+
+    if (process.env.NODE_ENV == "production") {
+        output.sameSite = 'Strict';
+        output.secure = true;
+    }
 
     return output;
 }
 
 //#endregion
 
+//#region middleware
+
+export const verifyJWTAccessToken = async (req, res, next) => {
+
+    const decodeStatus = await decodeAccessToken(req);
+
+    if (decodeStatus.success) {
+        req.userInfo = decodeStatus.userInfo;
+        req.userFromToken = decodeStatus.userFromToken;
+        req.accessToken = decodeStatus.accessToken;
+        next();
+        return;
+    } else {
+        return res.status(decodeStatus.code).json({ success: false, message: decodeStatus.message });
+    }
+}
+
+export const verifyJWTRefreshToken = async (req, res, next) => {
+
+    const decodeStatus = await decodeRefreshToken(req);
+
+    if (decodeStatus.success) {
+        req.userInfo = decodeStatus.userInfo;
+        req.userFromToken = decodeStatus.userFromToken;
+        req.refreshToken = decodeStatus.refreshToken;
+        next();
+        return;
+    } else {
+        return res.status(decodeStatus.code).json({ success: false, message: decodeStatus.message });
+    }
+}
+
 //#endregion
-
-export const verifyJWTAccessToken = (req, res, next) => {
-    
-    const decodeStatus = decodeAccessToken(req);
-
-    if(decodeStatus.success){
-        req.user = decodeStatus.username;
-        req.roles = decodeStatus.roles;
-        next();
-        return;
-    } else {
-        return res.status(decodeStatus.code).json({success: false, message: decodeStatus.message});
-    }
-}
-
-export const verifyJWTRefreshToken = (req, res, next) => {
-    
-    const decodeStatus = decodeRefreshToken(req);
-
-    if(decodeStatus.success){
-        req.user = decodeStatus.username;
-        req.roles = decodeStatus.roles;
-        next();
-        return;
-    } else {
-        return res.status(decodeStatus.code).json({success: false, message: decodeStatus.message});
-    }
-}
